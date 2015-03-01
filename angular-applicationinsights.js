@@ -36,11 +36,11 @@
 	var angularAppInsights = angular.module('ApplicationInsightsModule', ['LocalStorageModule']);
 
 	// configure the local storage module 
-	angularAppInsights.config(function (localStorageServiceProvider) {
+	angularAppInsights.config(['localStorageServiceProvider',function (localStorageServiceProvider) {
   		localStorageServiceProvider
    		 .setPrefix('appInsights')
     	 .setStorageCookie(0,'/');
-	});
+	}]);
 
 
 	angularAppInsights.provider('applicationInsightsService', function() {
@@ -60,8 +60,8 @@
 
 
 		// invoked when the provider is run
-		this.$get = ['localStorageService', '$http', '$locale','$window','$location', '$log', function(localStorageService, $http, $locale, $window, $location, $log){
-			return new ApplicationInsights(localStorageService, $http, $locale, $window, $location, $log);
+		this.$get = ['localStorageService', '$http', '$locale','$window','$location', '$log', function(localStorageService, $http, $locale, $window, $location, $log){	
+				return new ApplicationInsights(localStorageService, $http, $locale, $window, $location, $log);
 		}];
 
 
@@ -140,6 +140,31 @@
 					}
 				};
 			}
+
+			// $log interceptor .. will send log data to application insights
+			/*$provide.decorator( '$log', [ "$delegate", function( $delegate )
+            {
+                // Save the original $log.debug()
+                var debugFn = $delegate.debug;
+ 				var infoFn = $delegate.info;
+ 				var warnFn = $delegate.warn;
+ 				var errorFn = $delegate.error;
+ 				var logFn = $delegate.log;
+                $delegate.debug = function( )
+                {
+                  var args    = [].slice.call(arguments),
+                      now     = DateTime.formattedNow();
+ 
+                  // Prepend timestamp
+                  args[0] = supplant("{0} - {1}", [ now, args[0] ]);
+ 
+                  // Call the original with the output prepended with formatted timestamp
+                  debugFn.apply(null, args)
+                };
+ 
+                return $delegate;
+            }]);*/
+
 
 			// public api surface
 			return {

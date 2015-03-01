@@ -1,11 +1,12 @@
 var controllers = angular.module('controllers',['ApplicationInsightsModule']);
 
 
-controllers.controller('mainController',['$scope','applicationInsightsService', function($scope,applicationInsightsService){
+controllers.controller('mainController',['$scope','applicationInsightsService', '$log', function($scope,applicationInsightsService, $log){
 
 $scope.pageTitle = "Application Insights Demo - Main";
 $scope.message = "Main Page";
 
+$log.debug('main page loaded');
 
 }]);
 
