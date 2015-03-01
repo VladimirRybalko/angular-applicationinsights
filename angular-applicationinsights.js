@@ -102,14 +102,14 @@
 				$http(request);
 			}
 
-			var trackPageView = function(pageUrl){
+			var trackPageView = function(pageName){
 				var data = generateCommonData(_names.pageViews);
 
 				data.data ={
 					item:{
 						ver: 1,
-						url: isNullOrUndefined(pageUrl) ? $location.absUrl() : pageUrl ,
-						name: $window.document.title
+						url: $location.absUrl(),
+						name: isNullOrUndefined(pageName) ? $location.absUrl() : pageName 
 					},
 					type: _types.pageViews
 				};
@@ -157,13 +157,9 @@
                 pagePath =  applicationInsightsService.applicationName + '/' + pagePath;
             }
             finally {
-                applicationInsightsService.logPageView(pagePath);
+                applicationInsightsService.trackPageView(pagePath);
             }
         });
      }]);
-
-
-
-
 
 })( window.angular );
