@@ -11,10 +11,10 @@
     "url": "https://github.com/khaines/angular-applicationinsights"
   },
   "dependencies": {
-    "express": "3.2.x",
     "angular-local-storage": "*"
   },
   "devDependencies": {
+    "express": "*",
     "chai": "~1.6.0",
     "karma": "*",
     "karma-chrome-launcher": "^0.1.7",
