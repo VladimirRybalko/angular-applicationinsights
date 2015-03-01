@@ -1,3 +1,3 @@
 # angular-applicationinsights
 
-An implementation of Applications Insights as an AngularJS module.
+An implementation of Microsoft Application Insights as an AngularJS module.
