@@ -13,7 +13,8 @@
   		isArray = angular.isArray,
   		extend = angular.extend,
   		toJson = angular.toJson,
-  		fromJson = angular.fromJson;
+  		fromJson = angular.fromJson,
+  		noop = angular.noop;
 
   	var	isNullOrUndefined = function(val) {
     	return isUndefined(val) || val === null 
@@ -33,13 +34,62 @@
 	}
 
 
+	// $log interceptor .. will send log data to application insights, once app insights is 
+	// registered. $provide is only available in the config phase, so we need to setup
+	// the decorator before app insights is instantiated.
+	function LogInterceptor($provide){
+		// original functions
+		var debugFn,infoFn,warnFn,errorFn,logFn;
+
+		// function to invoke ... initialized to noop
+		var interceptFunction = noop;
+
+
+		this.setInterceptFunction = function(func){
+			interceptFunction = func;
+		};
+
+		var delegator = function(orignalFn, level){
+			return function( ){
+				var args    = [].slice.call(arguments)
+ 
+                  // track the call
+                  interceptFunction(args[0],level);
+                  // Call the original 
+                  orignalFn.apply(null, args)
+			}
+		}
+
+		$provide.decorator( '$log', [ "$delegate", function( $delegate )
+        {
+                debugFn = $delegate.debug;
+ 				infoFn = $delegate.info;
+ 				warnFn = $delegate.warn;
+ 				errorFn = $delegate.error;
+ 				logFn = $delegate.log;
+
+                $delegate.debug = delegator(debugFn, 'debug');
+                $delegate.info = delegator(infoFn, 'info');
+                $delegate.warn = delegator(warnFn, 'warn');
+                $delegate.error = delegator(errorFn,'error');
+                $delegate.log = delegator(logFn,'log');
+ 
+                return $delegate;
+        }]);
+
+	}
+
+	var _logInterceptor;
+
+
 	var angularAppInsights = angular.module('ApplicationInsightsModule', ['LocalStorageModule']);
 
 	// configure the local storage module 
-	angularAppInsights.config(['localStorageServiceProvider',function (localStorageServiceProvider) {
+	angularAppInsights.config(['localStorageServiceProvider','$provide',function (localStorageServiceProvider, $provide) {
   		localStorageServiceProvider
    		 .setPrefix('appInsights')
     	 .setStorageCookie(0,'/');
+    	 _logInterceptor = new LogInterceptor($provide);
 	}]);
 
 
@@ -72,10 +122,12 @@
 			var _contentType = 'application/json';
 			var _namespace = 'Microsoft.ApplicationInsights.';
 			var _names = {
-  				pageViews: _namespace+'Pageview'
+  				pageViews: _namespace+'Pageview',
+  				traceMessage: _namespace +'Message'
   			};
   			var _types ={
-  				pageViews: _namespace+'PageviewData'
+  				pageViews: _namespace+'PageviewData',
+  				traceMessage: _namespace+'MessageData'
   			};
 
 			var getUUID = function(){
@@ -116,6 +168,24 @@
 				sendData(data);
 			}
 
+			var trackTraceMessage = function(message, level){
+				var data = generateCommonData(_names.traceMessage);
+
+				data.data = {
+					item:{
+						ver: 1,
+						message: message,
+						severity: level
+					},
+					type: _types.traceMessage
+				};
+				sendData(data);
+
+			}
+
+			// set traceTraceMessage as the intercept method of the log decorator
+			_logInterceptor.setInterceptFunction(trackTraceMessage)
+
 			var generateCommonData = function(payloadTypeName){
 
 				return {
@@ -141,31 +211,6 @@
 				};
 			}
 
-			// $log interceptor .. will send log data to application insights
-			/*$provide.decorator( '$log', [ "$delegate", function( $delegate )
-            {
-                // Save the original $log.debug()
-                var debugFn = $delegate.debug;
- 				var infoFn = $delegate.info;
- 				var warnFn = $delegate.warn;
- 				var errorFn = $delegate.error;
- 				var logFn = $delegate.log;
-                $delegate.debug = function( )
-                {
-                  var args    = [].slice.call(arguments),
-                      now     = DateTime.formattedNow();
- 
-                  // Prepend timestamp
-                  args[0] = supplant("{0} - {1}", [ now, args[0] ]);
- 
-                  // Call the original with the output prepended with formatted timestamp
-                  debugFn.apply(null, args)
-                };
- 
-                return $delegate;
-            }]);*/
-
-
 			// public api surface
 			return {
 				'trackPageView': trackPageView,
@@ -174,16 +219,12 @@
 
 		}
 	})
+	// the run block sets up automatic page view tracking
 	.run(['$rootScope', '$location', 'applicationInsightsService', function($rootScope,$location,applicationInsightsService){
         $rootScope.$on('$locationChangeSuccess', function() {
-            var pagePath;
-            try {
-                pagePath = $location.path().substr(1);
-                pagePath =  applicationInsightsService.applicationName + '/' + pagePath;
-            }
-            finally {
-                applicationInsightsService.trackPageView(pagePath);
-            }
+           
+                applicationInsightsService.trackPageView(applicationInsightsService.applicationName + $location.path());
+ 
         });
      }]);
 

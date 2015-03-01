@@ -45,8 +45,6 @@ describe('Application Insights for Angular JS Provider', function(){
 			$httpBackend.flush();
 		});
 
-    
-	
 		it("Sent data should match contract expectications",function(){
 
 			$httpBackend.verifyNoOutstandingExpectation();
