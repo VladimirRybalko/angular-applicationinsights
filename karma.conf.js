@@ -10,12 +10,16 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha'],
+    frameworks: ['mocha', 'sinon-chai'],
 
 
     // list of files / patterns to load in the browser
     files: [
-      'test/**/*.js'
+     'node_modules/angular/angular.js',
+     'node_modules/angular-mocks/angular-mocks.js',
+     'node_modules/angular-local-storage/dist/angular-local-storage.min.js',
+      'src/*.js',
+      'test/*.js'
     ],
 
 
@@ -26,14 +30,17 @@ module.exports = function(config) {
 
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {
+   preprocessors: {
+      'src/*.js': ['coverage']
     },
 
+    coverageReporter: {
+      type: 'text-summary',
+      dir: 'coverage/'
+    },
 
     // test results reporter to use
-    // possible values: 'dots', 'progress'
-    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress'],
+    reporters: ['progress', 'coverage'],
 
 
     // web server port
@@ -55,7 +62,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome', 'Firefox', 'Safari', 'Opera', 'IE'],
+    browsers: ['PhantomJS'],
 
 
     // Continuous Integration mode
