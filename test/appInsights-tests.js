@@ -9,8 +9,9 @@ describe('Application Insights for Angular JS Provider', function(){
 
     }));
 
-	beforeEach(inject(function(applicationInsightsService) { 
+	beforeEach(inject(function(applicationInsightsService, _$httpBackend_) { 
 		_insights = applicationInsightsService;
+		$httpBackend = _$httpBackend_;
 	}));
  
 
@@ -23,14 +24,9 @@ describe('Application Insights for Angular JS Provider', function(){
 
 	describe("Page view Tracking", function(){
 
-		beforeEach(function(){
-			inject(function(_$httpBackend_){
-    			$httpBackend = _$httpBackend_;
-    		});
-		});
+		it("Sent data should match contract expectications",function(){
 
-		beforeEach(function(){
-			$httpBackend.whenPOST('https://dc.services.visualstudio.com/v2/track',function(json){
+			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
 				//expect(data.length).to.equal(1);
 				expect(data.name).to.equal('Microsoft.ApplicationInsights.Pageview');
@@ -43,14 +39,39 @@ describe('Application Insights for Angular JS Provider', function(){
 
 			_insights.trackPageView('/sometest/page');
 			$httpBackend.flush();
-		});
-
-		it("Sent data should match contract expectications",function(){
 
 			$httpBackend.verifyNoOutstandingExpectation();
       		$httpBackend.verifyNoOutstandingRequest();
  
 		});
 	});
+
+	describe("Log Message Tracking", function(){
+
+		it("Sent data should match contract expectications",function(){
+
+			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
+				var data = JSON.parse(json);
+				//expect(data.length).to.equal(1);
+				expect(data.name).to.equal('Microsoft.ApplicationInsights.Message');
+
+				return true;
+			}, function(headers){				
+				return headers['Content-Type'] == 'application/json';
+			})
+			.respond(200,"");
+
+			_insights.trackTraceMessage('this is a trace Message.');
+			$httpBackend.flush();
+
+			$httpBackend.verifyNoOutstandingExpectation();
+      		$httpBackend.verifyNoOutstandingRequest();
+ 
+		});
+
+
+	});
+
+
 
 });

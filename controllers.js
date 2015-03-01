@@ -14,6 +14,9 @@ controllers.controller('page1Controller',['$scope','applicationInsightsService',
 
 $scope.pageTitle = "Application Insights Demo - Page 1";
 $scope.message = "Page 1";
+$scope.clicked = function(){
+	applicationInsightsService.trackEvent("button clicked");
+}
 
 }]);
 

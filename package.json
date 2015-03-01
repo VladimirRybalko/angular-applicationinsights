@@ -2,10 +2,7 @@
   "name": "angular-applicationinsights",
   "description": "An AngularJS module for sending application telemetry to Microsoft Application Insights",
   "version": "0.0.1",
-  "scripts": {
-    "start": "node .",
-    "test": "NODE_ENV=test ./node_modules/mocha/bin/mocha"
-  },
+  "files":["src/angular-applicationinsights.js"],
   "repository": {
     "type": "git",
     "url": "https://github.com/khaines/angular-applicationinsights"

@@ -123,11 +123,13 @@
 			var _namespace = 'Microsoft.ApplicationInsights.';
 			var _names = {
   				pageViews: _namespace+'Pageview',
-  				traceMessage: _namespace +'Message'
+  				traceMessage: _namespace +'Message',
+  				events: _namespace +'Event'
   			};
   			var _types ={
   				pageViews: _namespace+'PageviewData',
-  				traceMessage: _namespace+'MessageData'
+  				traceMessage: _namespace+'MessageData',
+  				events: _namespace +'EventData'
   			};
 
 			var getUUID = function(){
@@ -155,41 +157,41 @@
 			}
 
 			var trackPageView = function(pageName){
-				var data = generateCommonData(_names.pageViews);
+				var data = generateAppInsightsData(_names.pageViews, 
+											_types.pageViews,
+											{
+												ver: 1,
+												url: $location.absUrl(),
+												name: isNullOrUndefined(pageName) ? $location.path() : pageName 
+											});
+				sendData(data);
+			}
 
-				data.data ={
-					item:{
-						ver: 1,
-						url: $location.absUrl(),
-						name: isNullOrUndefined(pageName) ? $location.absUrl() : pageName 
-					},
-					type: _types.pageViews
-				};
+			var trackEvent = function(eventName){
+				var data = generateAppInsightsData(_names.events,
+											_types.events,
+											{
+												ver:1,
+												name:eventName
+											});
 				sendData(data);
 			}
 
 			var trackTraceMessage = function(message, level){
-				var data = generateCommonData(_names.traceMessage);
-
-				data.data = {
-					item:{
-						ver: 1,
-						message: message,
-						severity: level
-					},
-					type: _types.traceMessage
-				};
+				var data = generateAppInsightsData(_names.traceMessage, 
+											_types.traceMessage,
+											{
+												ver: 1,
+												message: message,
+												severity: level
+											});
 				sendData(data);
-
 			}
 
-			// set traceTraceMessage as the intercept method of the log decorator
-			_logInterceptor.setInterceptFunction(trackTraceMessage)
-
-			var generateCommonData = function(payloadTypeName){
+			var generateAppInsightsData = function(payloadName, payloadDataType, payloadData){
 
 				return {
-					name: payloadTypeName,
+					name: payloadName,
 					time: new Date().toISOString(),
 					ver: 1,
 					iKey: _instrumentationKey,
@@ -207,13 +209,22 @@
 					},
 					internal: {
 						sdkVersion: _version
+					},
+					data:{
+						type: payloadDataType,
+						item: payloadData
 					}
 				};
 			}
 
+			// set traceTraceMessage as the intercept method of the log decorator
+			_logInterceptor.setInterceptFunction(trackTraceMessage)
+
 			// public api surface
 			return {
 				'trackPageView': trackPageView,
+				'trackTraceMessage': trackTraceMessage,
+				'trackEvent': trackEvent,
 				'applicationName': _applicationName
 			}
 
