@@ -1,20 +1,21 @@
-var controllers = angular.module('controllers',[]);
+var controllers = angular.module('controllers',['ApplicationInsightsModule']);
 
 
-controllers.controller('mainController',['$scope', function($scope){
+controllers.controller('mainController',['$scope','applicationInsightsService', function($scope,applicationInsightsService){
 
 $scope.message = "Main Page";
+applicationInsightsService.trackPageView();
 
 }]);
 
-controllers.controller('page1Controller',['$scope', function($scope){
+controllers.controller('page1Controller',['$scope','applicationInsightsService', function($scope,applicationInsightsService){
 
 $scope.message = "Page 1";
-
+applicationInsightsService.trackPageView();
 }]);
 
-controllers.controller('page2Controller',['$scope', function($scope){
+controllers.controller('page2Controller',['$scope','applicationInsightsService', function($scope,applicationInsightsService){
 
 $scope.message = "Page 2";
-
+applicationInsightsService.trackPageView();
 }]);
