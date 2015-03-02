@@ -4,6 +4,12 @@ An implementation of Microsoft Application Insights as an AngularJS module.
 
 ## Installation
 
+##### Prerequisites
+
+- A Microsoft Application Insights Instrumentation Key:
+    - This can be obtained from https://portal.azure.com, and registering an Application Insights resource.
+    - A tutorial on how to do this can be found @ http://azure.microsoft.com/en-us/documentation/articles/app-insights-web-track-usage/ . Depending on the version of the documentation the Instrumentation Key may also be referred to as 'iKey'. 
+
 ##### Via NPM
 
      npm i angular-applicationinsights
