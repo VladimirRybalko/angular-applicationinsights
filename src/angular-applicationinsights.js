@@ -55,6 +55,16 @@
 			interceptFunction = func;
 		};
 
+		this.getPrivateLoggingObject = function(){
+			return {
+				debug: isNullOrUndefined(debugFn) ? noop : debugFn,
+				info: isNullOrUndefined(infoFn) ? noop : infoFn,
+				warn: isNullOrUndefined(warnFn) ? noop : warnFn,
+				error: isNullOrUndefined(errorFn) ? noop : errorFn,
+				log: isNullOrUndefined(logFn) ? noop : logFn
+			};
+		};
+
 		var delegator = function(orignalFn, level){
 			return function( ){
 				var args    = [].slice.call(arguments);
@@ -90,25 +100,16 @@
 
 	var angularAppInsights = angular.module('ApplicationInsightsModule', ['LocalStorageModule']);
 
-	// configure the local storage module 
-	angularAppInsights.config(['localStorageServiceProvider','$provide',function (localStorageServiceProvider, $provide) {
-  		localStorageServiceProvider
-   		 .setPrefix('appInsights')
-    	 .setStorageCookie(0,'/');
+	// setup some features that can only be done during the configure pass
+	angularAppInsights.config(['$provide',function ($provide) {
     	 _logInterceptor = new LogInterceptor($provide);
 	}]);
-
 
 	angularAppInsights.provider('applicationInsightsService', function() {
 		// configuration properties for the provider
 		var _instrumentationKey = '';
 		var _applicationName =''; 
 		var _enableAutoPageViewTracking = true;
-
-		// sessionId is generated on initialization 
-		// TODO: If non SPA support is needed, then this should have more complex logic
-		// otherwise every change of page will generate a new session ID.
-		var _sessionId = generateGUID();
 
 		this.configure = function(instrumentationKey, applicationName, enableAutoPageViewTracking){
 			_instrumentationKey = instrumentationKey;
@@ -118,15 +119,16 @@
 
 
 		// invoked when the provider is run
-		this.$get = ['localStorageService', '$http', '$locale','$window','$location', '$log', function(localStorageService, $http, $locale, $window, $location, $log){	
-				return new ApplicationInsights(localStorageService, $http, $locale, $window, $location, $log);
+		this.$get = ['localStorageService', '$http', '$locale','$window','$location', function(localStorageService, $http, $locale, $window, $location){	
+				return new ApplicationInsights(localStorageService, $http, $locale, $window, $location);
 		}];
 
 
 
 		// Application Insights implementation
 		function ApplicationInsights(localStorage, $http, $locale, $window, $location){
-
+			
+			var _log = _logInterceptor.getPrivateLoggingObject(); // so we can log output without causing a recursive loop.
 			var _contentType = 'application/json';
 			var _namespace = 'Microsoft.ApplicationInsights.';
 			var _names = {
@@ -143,7 +145,7 @@
   			};
 
 			var getUUID = function(){
-				var uuidKey = 'uuid';
+				var uuidKey = '$$appInsights__uuid';
 				// see if there is already an id stored locally, if not generate a new value
 				var uuid =  localStorage.get(uuidKey);
 				if(isNullOrUndefined(uuid)){
@@ -151,6 +153,52 @@
 					localStorage.set(uuidKey, uuid);
 				}
 				return uuid;
+			};
+
+			var sessionKey = '$$appInsights_session';
+			var makeNewSession = function(){
+				// no existing session data
+					var sessionData = {
+						id:generateGUID(),
+						accessed: new Date().getTime()
+					};
+					localStorage.set(sessionKey,sessionData);
+					return sessionData;
+			};
+
+			var getSessionID = function(){
+				_log.debug('getSessionID called');
+				var sessionData = localStorage.get(sessionKey);
+				_log.debug('sessionData = '+ toJson(sessionData));
+				if(isNullOrUndefined(sessionData)){
+					_log.debug('no existing session data');
+					// no existing session data
+					sessionData = makeNewSession();
+				}
+				else
+				{
+					_log.debug('existing session data');
+					// session data exists ... see if it has past the inactivity timeout 
+					// TODO: Make this configurable during the config option refactoring.
+					var inactivityTimeout = 1800000; // 30mins in ms
+					var lastAccessed = isNullOrUndefined(sessionData.accessed) ? 0 : sessionData.accessed;
+					var now = new Date().getTime();
+					if(( now - lastAccessed > inactivityTimeout))
+					{
+						_log.debug('session is expired, generating new data');
+						// this session is expired, make a new one
+						sessionData = makeNewSession();
+					}
+					else
+					{
+						_log.debug('session data is current, reusing existing data');
+						// valid session, update the last access timestamp
+						sessionData.accessed = now;
+						localStorage.set(sessionKey, sessionData);
+					}
+				}
+
+				return sessionData.id;
 			};
 
 			var sendData = function(data){
@@ -217,7 +265,7 @@
 					iKey: _instrumentationKey,
 					user: {id: getUUID()},
 					session: {
-						id: _sessionId
+						id: getSessionID()
 					},
 					operation: {
 						id: generateGUID()
