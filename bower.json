@@ -1,0 +1,31 @@
+{
+  "name": "angular-applicationinsights",
+  "version": "0.0.2",
+  "homepage": "https://github.com/khaines/angular-applicationinsights",
+  "authors": [
+    "Ken Haines <ken@kenhaines.net>"
+  ],
+  "description": "An angularJS module for using Microsoft Application Insights from within an angularJS application",
+  "main": "build/angular-applicationinsights.min.js",
+  "moduleType": [
+    "amd"
+  ],
+  "keywords": [
+    "appInsights",
+    "stats",
+    "metrics",
+    "telemetry",
+    "Microsoft"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-local-storage": "~0.1.5"
+  }
+}

@@ -1,10 +1,12 @@
 {
   "name": "angular-applicationinsights",
   "description": "An AngularJS module for sending application telemetry to Microsoft Application Insights",
+  "author": "Ken Haines <ken@kenhaines.net> (http://www.kenhaines.net)",
+  "keywords": ["angularJS", "app insights", "appinsights", "application insights", "Microsoft Appinsights",
+               "Microsoft Application Insights", "telemetry", "log collection", "tracking"],
   "version": "0.0.1",
   "files": [
-    "dist/angular-applicationinsights.js",
-    "dist/angular-applicationinsights.min.js"
+    "build/angular-applicationinsights.min.js"
   ],
   "repository": {
     "type": "git",

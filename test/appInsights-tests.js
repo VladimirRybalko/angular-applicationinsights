@@ -78,6 +78,49 @@ describe('Application Insights for Angular JS Provider', function(){
 
 	});
 
+	describe("Custom Event Tracking", function(){
+
+		it("Sent data should match contract expectications",function(){
+
+			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
+				var data = JSON.parse(json);
+				//expect(data.length).to.equal(1);
+				expect(data.name).to.equal('Microsoft.ApplicationInsights.Event');
+
+				return true;
+			}, function(headers){				
+				return headers['Content-Type'] == 'application/json';
+			})
+			.respond(200,"");
+
+			_insights.trackEvent('Some Test Event');
+			$httpBackend.flush();
+		});
+	});
+
+	describe("Custom Metric Tracking", function(){
+
+		it("Sent data should match contract expectications",function(){
+
+			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
+				var data = JSON.parse(json);
+				//expect(data.length).to.equal(1);
+				expect(data.name).to.equal('Microsoft.ApplicationInsights.Metric');
+
+				return true;
+			}, function(headers){				
+				return headers['Content-Type'] == 'application/json';
+			})
+			.respond(200,"");
+
+			_insights.trackMetric('Test Metric', 2345);
+			$httpBackend.flush();
+ 
+		});
+
+
+	});
+
 
 
 });

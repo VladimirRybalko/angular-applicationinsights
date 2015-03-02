@@ -1,3 +1,9 @@
+/*
+ *  angular-applicationinsights
+ *	An angularJS module for using Microsoft Application Insights
+ *  https://github.com/khaines/angular-applicationinsights
+ */
+ 
 (function (angular) {
 /*jshint globalstrict:true*/
 'use strict';
