@@ -10,6 +10,7 @@ An implementation of Microsoft Application Insights as an AngularJS module.
 
 1. Run the above command from within your root project folder
 2. Add a reference to the application insights script in your main app view, after the angularJS reference:
+    
     ```HTML
     <!--Dependency on the Angular Local Storage Module-->
     <script src="/node_modules/angular-applicationinsights/node_modules/angular-local-storage/dist/angular-local-storage.min.js" />
@@ -18,6 +19,7 @@ An implementation of Microsoft Application Insights as an AngularJS module.
     ```
 3. Add 'ApplicationInsightsModule' to the list of modules required by your application.
 4. Configure the provider during your application module's config phase:
+    
     ```Javascript
     myAmazingApp.config(function(applicationInsightsServiceProvider){
         applicationInsightsServiceProvider.configure('<PUT YOUR APPLICATION INSIGHTS KEY HERE', 'myAmazingApp');
