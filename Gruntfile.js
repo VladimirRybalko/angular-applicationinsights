@@ -14,13 +14,19 @@ module.exports = function(grunt) {
     },
     jshint: {
       all: ['src/**/*js', 'test/**/*.js']
+    },
+    karma: {
+      unit: {
+        configFile: 'karma.conf.js'
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
   
-  grunt.registerTask('default', ['jshint','uglify']);
+  grunt.registerTask('default', ['jshint','karma','uglify']);
 
 };
