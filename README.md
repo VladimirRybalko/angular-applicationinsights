@@ -31,3 +31,34 @@ bower install angular-applicationinsights
     })
     ```
 5. Start using your application. In the default configuration the Application Insights module will automatically track view changes and $log events, sending the telemetry to Microsoft Application Insights.
+
+
+## API Reference
+
+#### trackPageView
+Emits a telemetry event signifying a page or view change has occured. In the default configuration of this module this event is sent automatically when $locationChangeSuccess event is fired.
+##### Parameters
+*    pageName: String - (Optional) A friendly name for the page to be shown the Application Insights Portal. Default is the url path.
+
+#### trackTraceMessage
+Sends a log event message to Application Insights. This method can be called explicitly, but the Application Insights module extends the $log service, so that messages using the $log service will be sent to Application Insights.
+##### Parameters
+*   message: String - (Required) Log message to record to the server.
+   
+#### trackEvent
+Sends a custom event to Application Insights. 
+##### Parameters
+*   eventName: String - (Required) The name of the event.
+
+#### trackMetric
+Sends a metric consisting of a name/value pair to Application Insights
+##### Parameters
+*   metricName: String - (Required) The name of the metric.
+*   value: Numeric - (Required) A number representing the value of the metric.
+
+
+
+
+    
+    
+    
