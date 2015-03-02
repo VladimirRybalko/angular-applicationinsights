@@ -12,11 +12,17 @@ $log.debug('main page loaded');
 
 controllers.controller('page1Controller',['$scope','applicationInsightsService', function($scope,applicationInsightsService){
 
+var loadedTime = new Date().getTime();
+
 $scope.pageTitle = "Application Insights Demo - Page 1";
 $scope.message = "Page 1";
 $scope.clicked = function(){
 	applicationInsightsService.trackEvent("button clicked");
+	var clickedTime = new Date().getTime();
+	applicationInsightsService.trackMetric('Button Click Delay', clickedTime- loadedTime);
 }
+
+
 
 }]);
 

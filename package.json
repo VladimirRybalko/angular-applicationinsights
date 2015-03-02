@@ -2,26 +2,32 @@
   "name": "angular-applicationinsights",
   "description": "An AngularJS module for sending application telemetry to Microsoft Application Insights",
   "version": "0.0.1",
-  "files":["src/angular-applicationinsights.js"],
+  "files": [
+    "dist/angular-applicationinsights.js",
+    "dist/angular-applicationinsights.min.js"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/khaines/angular-applicationinsights"
   },
   "dependencies": {
-    "angular-local-storage": "*"
+    "angular-local-storage": "0.1.5"
   },
   "devDependencies": {
-    "express": "*",
     "chai": "~1.6.0",
+    "express": "*",
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.11.0",
+    "grunt-contrib-uglify": "^0.8.0",
     "karma": "*",
     "karma-chrome-launcher": "^0.1.7",
+    "karma-coverage": "*",
     "karma-firefox-launcher": "^0.1.4",
     "karma-ie-launcher": "^0.1.5",
     "karma-mocha": "^0.1.10",
     "karma-opera-launcher": "^0.1.0",
     "karma-safari-launcher": "^0.1.1",
     "karma-sinon-chai": "^0.3.0",
-    "karma-coverage": "*",
     "mocha": "~1.10.0"
   },
   "license": "MIT"

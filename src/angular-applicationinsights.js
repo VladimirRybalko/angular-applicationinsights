@@ -17,8 +17,8 @@
   		noop = angular.noop;
 
   	var	isNullOrUndefined = function(val) {
-    	return isUndefined(val) || val === null 
-	}
+    	return isUndefined(val) || val === null; 
+	};
 
 
 	var generateGUID = function(){
@@ -31,7 +31,7 @@
         value[14] = "4";
         value[19] = digits.substr((value[19] & 0x3) | 0x8, 1);  
         return value.join("");
-	}
+	};
 
 
 	// $log interceptor .. will send log data to application insights, once app insights is 
@@ -51,14 +51,14 @@
 
 		var delegator = function(orignalFn, level){
 			return function( ){
-				var args    = [].slice.call(arguments)
+				var args    = [].slice.call(arguments);
  
                   // track the call
                   interceptFunction(args[0],level);
                   // Call the original 
-                  orignalFn.apply(null, args)
-			}
-		}
+                  orignalFn.apply(null, args);
+			};
+		};
 
 		$provide.decorator( '$log', [ "$delegate", function( $delegate )
         {
@@ -106,7 +106,7 @@
 		this.configure = function(instrumentationKey, applicationName){
 			_instrumentationKey = instrumentationKey;
 			_applicationName = applicationName;
-		}
+		};
 
 
 		// invoked when the provider is run
@@ -124,12 +124,14 @@
 			var _names = {
   				pageViews: _namespace+'Pageview',
   				traceMessage: _namespace +'Message',
-  				events: _namespace +'Event'
+  				events: _namespace +'Event',
+  				metrics: _namespace +'Metric'
   			};
   			var _types ={
   				pageViews: _namespace+'PageviewData',
   				traceMessage: _namespace+'MessageData',
-  				events: _namespace +'EventData'
+  				events: _namespace +'EventData',
+  				metrics: _namespace +'MetricData'
   			};
 
 			var getUUID = function(){
@@ -141,7 +143,7 @@
 					localStorage.set(uuidKey, uuid);
 				}
 				return uuid;
-			}
+			};
 
 			var sendData = function(data){
 				var request = {
@@ -151,10 +153,10 @@
 						'Content-Type': _contentType
 					},
 					data:data
-				}
+				};
 
 				$http(request);
-			}
+			};
 
 			var trackPageView = function(pageName){
 				var data = generateAppInsightsData(_names.pageViews, 
@@ -165,7 +167,7 @@
 												name: isNullOrUndefined(pageName) ? $location.path() : pageName 
 											});
 				sendData(data);
-			}
+			};
 
 			var trackEvent = function(eventName){
 				var data = generateAppInsightsData(_names.events,
@@ -175,7 +177,7 @@
 												name:eventName
 											});
 				sendData(data);
-			}
+			};
 
 			var trackTraceMessage = function(message, level){
 				var data = generateAppInsightsData(_names.traceMessage, 
@@ -186,7 +188,17 @@
 												severity: level
 											});
 				sendData(data);
-			}
+			};
+
+			var trackMetric = function(name, value){
+				var data = generateAppInsightsData(_names.metrics, 
+												_types.metrics,
+												{
+													ver: 1,
+													metrics: [{name:name,value:value}]
+												});
+				sendData(data);
+			};
 
 			var generateAppInsightsData = function(payloadName, payloadDataType, payloadData){
 
@@ -215,18 +227,19 @@
 						item: payloadData
 					}
 				};
-			}
+			};
 
 			// set traceTraceMessage as the intercept method of the log decorator
-			_logInterceptor.setInterceptFunction(trackTraceMessage)
+			_logInterceptor.setInterceptFunction(trackTraceMessage);
 
 			// public api surface
 			return {
 				'trackPageView': trackPageView,
 				'trackTraceMessage': trackTraceMessage,
 				'trackEvent': trackEvent,
+				'trackMetric': trackMetric,
 				'applicationName': _applicationName
-			}
+			};
 
 		}
 	})
