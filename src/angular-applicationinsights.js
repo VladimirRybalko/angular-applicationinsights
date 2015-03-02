@@ -97,15 +97,17 @@
 		// configuration properties for the provider
 		var _instrumentationKey = '';
 		var _applicationName =''; 
+		var _enableAutoPageViewTracking = true;
 
 		// sessionId is generated on initialization 
 		// TODO: If non SPA support is needed, then this should have more complex logic
 		// otherwise every change of page will generate a new session ID.
 		var _sessionId = generateGUID();
 
-		this.configure = function(instrumentationKey, applicationName){
+		this.configure = function(instrumentationKey, applicationName, enableAutoPageViewTracking){
 			_instrumentationKey = instrumentationKey;
 			_applicationName = applicationName;
+			_enableAutoPageViewTracking = isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
 		};
 
 
@@ -238,7 +240,8 @@
 				'trackTraceMessage': trackTraceMessage,
 				'trackEvent': trackEvent,
 				'trackMetric': trackMetric,
-				'applicationName': _applicationName
+				'applicationName': _applicationName,
+				'autoPageViewTracking': _enableAutoPageViewTracking
 			};
 
 		}
@@ -246,9 +249,10 @@
 	// the run block sets up automatic page view tracking
 	.run(['$rootScope', '$location', 'applicationInsightsService', function($rootScope,$location,applicationInsightsService){
         $rootScope.$on('$locationChangeSuccess', function() {
-           
-                applicationInsightsService.trackPageView(applicationInsightsService.applicationName + $location.path());
- 
+           	
+           		if(applicationInsightsService.autoPageViewTracking){
+                	applicationInsightsService.trackPageView(applicationInsightsService.applicationName + $location.path());
+ 				}
         });
      }]);
 

@@ -5,20 +5,29 @@ describe('Application Insights for Angular JS Provider', function(){
 	var $httpBackend;
 
 	beforeEach( module('LocalStorageModule','ApplicationInsightsModule', function(applicationInsightsServiceProvider){
-    	applicationInsightsServiceProvider.configure('1234567890','angularjs-appinsights-unittests');
+    	applicationInsightsServiceProvider.configure('1234567890','angularjs-appinsights-unittests', false);
 
     }));
 
-	beforeEach(inject(function(applicationInsightsService, _$httpBackend_) { 
+	beforeEach(inject(function(applicationInsightsService, $injector) { 
 		_insights = applicationInsightsService;
-		$httpBackend = _$httpBackend_;
+		$httpBackend = $injector.get('$httpBackend');
 	}));
  
+ 	afterEach(function(){
+
+			$httpBackend.verifyNoOutstandingExpectation();
+      		$httpBackend.verifyNoOutstandingRequest();
+ 	});
 
 	describe("Configuration Settings", function(){
 
 		it("Should remember the configured application name", function(){
       		expect(_insights.applicationName).to.equal('angularjs-appinsights-unittests');
+    	});
+
+    	it("Should remember that automatic pageview tracking is disabled for tests", function(){
+    		expect(_insights.autoPageViewTracking).to.equal(false);
     	});
 	});
 
@@ -26,22 +35,22 @@ describe('Application Insights for Angular JS Provider', function(){
 
 		it("Sent data should match contract expectications",function(){
 
-			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
+			$httpBackend.resetExpectations();
+			$httpBackend.expect('POST','https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
 				//expect(data.length).to.equal(1);
 				expect(data.name).to.equal('Microsoft.ApplicationInsights.Pageview');
 
 				return true;
-			}, function(headers){				
+			}, function(headers){
+				expect(headers['Content-Type']).to.equal('application/json');				
 				return headers['Content-Type'] == 'application/json';
 			})
 			.respond(200,"");
 
+
 			_insights.trackPageView('/sometest/page');
 			$httpBackend.flush();
-
-			$httpBackend.verifyNoOutstandingExpectation();
-      		$httpBackend.verifyNoOutstandingRequest();
  
 		});
 	});
@@ -63,9 +72,6 @@ describe('Application Insights for Angular JS Provider', function(){
 
 			_insights.trackTraceMessage('this is a trace Message.');
 			$httpBackend.flush();
-
-			$httpBackend.verifyNoOutstandingExpectation();
-      		$httpBackend.verifyNoOutstandingRequest();
  
 		});
 
