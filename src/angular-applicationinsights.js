@@ -3,13 +3,13 @@
  *	An angularJS module for using Microsoft Application Insights
  *  https://github.com/khaines/angular-applicationinsights
  */
- 
+
 (function (angular) {
 /*jshint globalstrict:true*/
 'use strict';
 
 	
-	var _version='angular-0.0.1';
+	var _version='angular-0.0.2';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,
