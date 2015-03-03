@@ -1,7 +1,7 @@
 
 angular-applicationinsights
 ===========================
-[![npm version][npm-image]][npm-url] [![Build Status][travisCI-image]][travisCI-url] [![Coverage Status][coveralls-image]][coveralls-url]
+[![npm version][npm-image]][npm-url] [![license][lic-image]][lic-url] [![Build Status][travisCI-image]][travisCI-url] [![Coverage Status][coveralls-image]][coveralls-url]
 
 An implementation of Microsoft Application Insights as a 100% AngularJS module. This module does not utilize the offical Application Insights Javascript SDK, in order to avoid depending on global code outside of the AngularJS platform scope.
 
@@ -66,6 +66,7 @@ Sends a metric consisting of a name/value pair to Application Insights
 [coveralls-url]: https://coveralls.io/r/khaines/angular-applicationinsights?branch=master
 [npm-image]: https://img.shields.io/npm/v/angular-applicationinsights.svg
 [npm-url]: https://www.npmjs.com/package/angular-applicationinsights
-    
+[lic-image]: http://img.shields.io/npm/l/angular-applicationinsights.svg
+[lic-url]: LICENSE
     
     
