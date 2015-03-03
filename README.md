@@ -1,6 +1,6 @@
 # angular-applicationinsights
 
-An implementation of Microsoft Application Insights as a pure AngularJS module.
+An implementation of Microsoft Application Insights as a 100% AngularJS module. This module does not utilize the offical Application Insights Javascript SDK, in order to avoid depending on global code outside of the AngularJS platform scope.
 
 ## Getting Started
 
