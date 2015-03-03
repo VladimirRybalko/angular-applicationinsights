@@ -4,7 +4,7 @@
   "author": "Ken Haines <ken@kenhaines.net> (http://www.kenhaines.net)",
   "keywords": ["angularJS", "app insights", "appinsights", "application insights", "Microsoft Appinsights",
                "Microsoft Application Insights", "telemetry", "log collection","metrics", "tracking"],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "files": [
     "build/angular-applicationinsights.min.js"
   ],
