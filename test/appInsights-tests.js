@@ -74,8 +74,6 @@ describe('Application Insights for Angular JS Provider', function(){
 			$httpBackend.flush();
  
 		});
-
-
 	});
 
 	describe("Custom Event Tracking", function(){
@@ -117,10 +115,6 @@ describe('Application Insights for Angular JS Provider', function(){
 			$httpBackend.flush();
  
 		});
-
-
 	});
-
-
 
 });

@@ -201,6 +201,47 @@
 				return sessionData.id;
 			};
 
+			var validateMeasurements = function(measurements)
+			{
+				if(!isObject(measurements)){
+					_log.warn('The value of the measurements parameter must be an object consisting of a string/number pairs.');
+					return null;
+				}
+
+				var validatedMeasurements={};
+				for(var metricName in measurements){
+					if( isNumber(measurements[metricName])){
+						validatedMeasurements[metricName] = measurements[metricName];
+					}
+					else
+					{
+						_log.warn('The value of measurement '+metricName+' is not a number.');
+					}
+				}
+
+				return validatedMeasurements;
+			};
+
+			var validateProperties = function(properties){
+				
+				if(!isObject(properties)){
+					_log.warn('The value of the properties parameter must be an object consisting of a string/string pairs.');
+					return null;
+				}
+
+				var validateProperties={};
+				for(var propName in properties){
+					var currentProp = properties[propName];
+					if(!isNullOrUndefined(currentProp) && !isObject(currentProp) && !isArray(currentProp)){
+						validateProperties[propName] = currentProp;
+					}
+					else{
+						_log.warn('The value of property '+propName+' could not be determined to be a string or number.');
+					}
+				}
+				return validateProperties;
+			};
+
 			var sendData = function(data){
 				var request = {
 					method: 'POST',
@@ -225,12 +266,14 @@
 				sendData(data);
 			};
 
-			var trackEvent = function(eventName){
+			var trackEvent = function(eventName,properties,measurements){
 				var data = generateAppInsightsData(_names.events,
 											_types.events,
 											{
 												ver:1,
-												name:eventName
+												name:eventName,
+												properties: validateProperties(properties),
+												measurements: validateMeasurements(measurements)
 											});
 				sendData(data);
 			};
