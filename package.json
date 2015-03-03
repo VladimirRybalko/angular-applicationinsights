@@ -28,6 +28,7 @@
     "karma-chrome-launcher": "^0.1.7",
     "karma-coverage": "*",
     "karma-firefox-launcher": "^0.1.4",
+    "karma-phantomjs-launcher": "^0.1.4",
     "karma-ie-launcher": "^0.1.5",
     "karma-mocha": "^0.1.10",
     "karma-opera-launcher": "^0.1.0",
