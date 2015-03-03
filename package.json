@@ -2,15 +2,25 @@
   "name": "angular-applicationinsights",
   "description": "An angularJS module for sending application telemetry to Microsoft Application Insights",
   "author": "Ken Haines <ken@kenhaines.net> (http://www.kenhaines.net)",
-  "keywords": ["angularJS", "app insights", "appinsights", "application insights", "Microsoft Appinsights",
-               "Microsoft Application Insights", "telemetry", "log collection","metrics", "tracking"],
+  "keywords": [
+    "angularJS",
+    "app insights",
+    "appinsights",
+    "application insights",
+    "Microsoft Appinsights",
+    "Microsoft Application Insights",
+    "telemetry",
+    "log collection",
+    "metrics",
+    "tracking"
+  ],
   "version": "0.0.2",
   "files": [
     "build/angular-applicationinsights.min.js"
   ],
-  "scripts":{
-    "test":"grunt"
-    },
+  "scripts": {
+    "test": "grunt"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/khaines/angular-applicationinsights"
@@ -19,7 +29,7 @@
     "angular-local-storage": "0.1.5"
   },
   "devDependencies": {
-    "angular":"~1.3.14",
+    "angular": "~1.3.14",
     "angular-mocks": "~1.3.14",
     "chai": "~1.6.0",
     "express": "*",
@@ -27,14 +37,15 @@
     "grunt-contrib-jshint": "^0.11.0",
     "grunt-contrib-uglify": "^0.8.0",
     "grunt-karma": "^0.10.1",
+    "grunt-karma-coveralls": "^2.5.3",
     "karma": "*",
     "karma-chrome-launcher": "^0.1.7",
     "karma-coverage": "*",
     "karma-firefox-launcher": "^0.1.4",
-    "karma-phantomjs-launcher": "^0.1.4",
     "karma-ie-launcher": "^0.1.5",
     "karma-mocha": "^0.1.10",
     "karma-opera-launcher": "^0.1.0",
+    "karma-phantomjs-launcher": "^0.1.4",
     "karma-safari-launcher": "^0.1.1",
     "karma-sinon-chai": "^0.3.0",
     "mocha": "~1.10.0"

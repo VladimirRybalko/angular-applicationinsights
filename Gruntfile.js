@@ -12,6 +12,15 @@ module.exports = function(grunt) {
         dest: 'build/<%= pkg.name %>.min.js'
       }
     },
+    coveralls: {
+      options: {
+          debug: true,
+          coverageDir: 'coverage/',
+          dryRun: true,
+          force: true,
+          recursive: true
+      }
+    },
     jshint: {
       all: ['src/**/*js', 'test/**/*.js']
     },
@@ -25,8 +34,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-karma-coveralls');
 
   
-  grunt.registerTask('default', ['jshint','karma','uglify']);
+  grunt.registerTask('default', ['jshint','karma','uglify','coveralls']);
 
 };
