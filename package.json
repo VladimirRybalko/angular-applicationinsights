@@ -8,6 +8,9 @@
   "files": [
     "build/angular-applicationinsights.min.js"
   ],
+  "scripts":{
+    "test":"grunt"
+    },
   "repository": {
     "type": "git",
     "url": "https://github.com/khaines/angular-applicationinsights"
