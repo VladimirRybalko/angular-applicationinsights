@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/khaines/angular-applicationinsights.png?label=ready&title=Ready)](https://waffle.io/khaines/angular-applicationinsights)
 
 angular-applicationinsights
 ===========================
