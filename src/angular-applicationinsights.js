@@ -255,18 +255,22 @@
 				$http(request);
 			};
 
-			var trackPageView = function(pageName){
+			var trackPageView = function(pageName, pageUrl, properties, measurements){
+				// TODO: consider possible overloads (no name or url but properties and measurements)
+
 				var data = generateAppInsightsData(_names.pageViews, 
 											_types.pageViews,
 											{
 												ver: 1,
-												url: $location.absUrl(),
-												name: isNullOrUndefined(pageName) ? $location.path() : pageName 
+												url: isNullOrUndefined(pageUrl) ? $location.absUrl() : pageUrl,
+												name: isNullOrUndefined(pageName) ? $location.path() : pageName,
+												properties: validateProperties(properties),
+												measurements: validateMeasurements(measurements) 
 											});
 				sendData(data);
 			};
 
-			var trackEvent = function(eventName,properties,measurements){
+			var trackEvent = function(eventName, properties, measurements){
 				var data = generateAppInsightsData(_names.events,
 											_types.events,
 											{
@@ -278,23 +282,25 @@
 				sendData(data);
 			};
 
-			var trackTraceMessage = function(message, level){
+			var trackTraceMessage = function(message, level, properties){
 				var data = generateAppInsightsData(_names.traceMessage, 
 											_types.traceMessage,
 											{
 												ver: 1,
 												message: message,
-												severity: level
+												severity: level,
+												properties: validateProperties(properties)
 											});
 				sendData(data);
 			};
 
-			var trackMetric = function(name, value){
+			var trackMetric = function(name, value, properties){
 				var data = generateAppInsightsData(_names.metrics, 
 												_types.metrics,
 												{
 													ver: 1,
-													metrics: [{name:name,value:value}]
+													metrics: [{name:name,value:value}],
+													properties: validateProperties(properties)
 												});
 				sendData(data);
 			};
