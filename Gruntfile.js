@@ -16,8 +16,8 @@ module.exports = function(grunt) {
       options: {
           debug: true,
           coverageDir: 'coverage/',
-          dryRun: true,
-          force: true,
+          dryRun: false,
+          force: false,
           recursive: true
       }
     },
@@ -37,6 +37,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma-coveralls');
 
   
-  grunt.registerTask('default', ['jshint','karma','uglify','coveralls']);
+  grunt.registerTask('default', ['jshint','karma','uglify']);
+  grunt.registerTask('travis',['jshint','karma','uglify','coveralls']);
 
 };
