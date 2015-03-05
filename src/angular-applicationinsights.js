@@ -368,7 +368,7 @@
 			autoLogTracking: true,
 			autoExceptionTracking: true,
 			sessionInactivityTimeout: 1800000
-		}
+		};
 		
 
 		this.configure = function(instrumentationKey, applicationName, enableAutoPageViewTracking){
