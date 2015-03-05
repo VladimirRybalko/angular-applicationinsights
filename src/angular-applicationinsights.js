@@ -366,7 +366,8 @@
 			applicationName : '',
 			autoPageViewTracking: true,
 			autoLogTracking: true,
-			autoExceptionTracking: true
+			autoExceptionTracking: true,
+			sessionInactivityTimeout: 1800000
 		}
 		
 
@@ -436,31 +437,29 @@
 			};
 
 			var getSessionID = function(){
-				_log.debug('getSessionID called');
+			
 				var sessionData = localStorage.get(sessionKey);
-				_log.debug('sessionData = '+ toJson(sessionData));
+			
 				if(isNullOrUndefined(sessionData)){
-					_log.debug('no existing session data');
+		
 					// no existing session data
 					sessionData = makeNewSession();
 				}
 				else
 				{
-					_log.debug('existing session data');
-					// session data exists ... see if it has past the inactivity timeout 
-					// TODO: Make this configurable during the config option refactoring.
-					var inactivityTimeout = 1800000; // 30mins in ms
+			
+		
 					var lastAccessed = isNullOrUndefined(sessionData.accessed) ? 0 : sessionData.accessed;
 					var now = new Date().getTime();
-					if(( now - lastAccessed > inactivityTimeout))
+					if(( now - lastAccessed > _options.sessionInactivityTimeout))
 					{
-						_log.debug('session is expired, generating new data');
+
 						// this session is expired, make a new one
 						sessionData = makeNewSession();
 					}
 					else
 					{
-						_log.debug('session data is current, reusing existing data');
+
 						// valid session, update the last access timestamp
 						sessionData.accessed = now;
 						localStorage.set(sessionKey, sessionData);
