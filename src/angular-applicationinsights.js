@@ -652,6 +652,7 @@
 				'trackTraceMessage': trackTraceMessage,
 				'trackEvent': trackEvent,
 				'trackMetric': trackMetric,
+				'trackException' : trackException,
 				'applicationName': _options.applicationName,
 				'autoPageViewTracking': _options.autoPageViewTracking
 			};

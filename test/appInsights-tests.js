@@ -4,7 +4,7 @@ describe('Application Insights for Angular JS Provider', function(){
 	var _insights;
 	var $httpBackend;
 	var $log;
-
+	var $exceptionHandler;
 	beforeEach( module('LocalStorageModule','ApplicationInsightsModule', function(applicationInsightsServiceProvider){
     	applicationInsightsServiceProvider.configure('1234567890','angularjs-appinsights-unittests', false);
 
@@ -15,6 +15,7 @@ describe('Application Insights for Angular JS Provider', function(){
 		$httpBackend = $injector.get('$httpBackend');
 		$log = $injector.get('$log');
 		$log.reset();
+		$exceptionHandler = $injector.get('$exceptionHandler');
 	}));
  
  	afterEach(function(){
@@ -141,6 +142,34 @@ describe('Application Insights for Angular JS Provider', function(){
 			.respond(200,'');
 
 			_insights.trackMetric('Test Metric', 2345, {testProp:'testValue'});
+			$httpBackend.flush();
+ 
+		});
+	});
+
+	describe('Exception/Crash Tracking', function(){
+
+		it('Crashes should be sent to Application Insights',function(){
+
+			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
+				var data = JSON.parse(json);
+				//expect(data.length).to.equal(1);
+				expect(data.name).to.equal('Microsoft.ApplicationInsights.Exception');
+				return true;
+			}, function(headers){				
+				return headers['Content-Type'] == 'application/json';
+			})
+			.respond(200,'');
+
+			try
+			{
+				// cause an exception
+			   1+z; // jshint ignore:line
+			}
+			catch(e){
+				_insights.trackException(e);
+			}
+
 			$httpBackend.flush();
  
 		});
