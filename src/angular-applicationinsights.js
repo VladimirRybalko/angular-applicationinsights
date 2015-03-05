@@ -190,8 +190,6 @@
         	},
         	setLineNumber: function (v) {
             	if (!isNumber(v)) {
-            		console.log(v);
-            		console.log(isNumber);
                 	throw new TypeError('Line Number must be a Number');
             	}
             	this.line = Number(v);
@@ -374,7 +372,6 @@
 
 		this.configure = function(instrumentationKey, applicationName, enableAutoPageViewTracking){
 			if(isString(applicationName)){
-				console.debug('This method is deprecated. Please call configure(instrumentationKey, options) method.');
 				_instrumentationKey = instrumentationKey;
 				_options.applicationName = applicationName;
 				_options.autoPageViewTracking = isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
