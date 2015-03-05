@@ -14,7 +14,7 @@
     "metrics",
     "tracking"
   ],
-  "version": "0.0.2",
+  "version": "0.1.0",
   "files": [
     "build/angular-applicationinsights.min.js"
   ],
