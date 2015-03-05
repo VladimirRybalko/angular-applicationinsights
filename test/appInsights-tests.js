@@ -154,6 +154,7 @@ describe('Application Insights for Angular JS Provider', function(){
 			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
 				//expect(data.length).to.equal(1);
+
 				expect(data.name).to.equal('Microsoft.ApplicationInsights.Exception');
 				return true;
 			}, function(headers){				
