@@ -4,7 +4,12 @@
 var analyticsDemo = angular.module('appAnalyticsDemo', ['ngRoute','LocalStorageModule','controllers', 'ApplicationInsightsModule']);
 
 analyticsDemo.config(function(applicationInsightsServiceProvider){
-    applicationInsightsServiceProvider.configure('60e02de5-021f-42a7-8695-c14df5fb7d08', 'analyticsDemo');
+    applicationInsightsServiceProvider.configure('60e02de5-021f-42a7-8695-c14df5fb7d08', {
+                                                                                            applicationName:'analyticsDemo',
+                                                                                            autoLogTracking:true,
+                                                                                            autoPageViewTracking:true,
+                                                                                            autoExceptionTracking:true
+                                                                                        });
 })
 
 

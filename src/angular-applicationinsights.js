@@ -14,13 +14,18 @@
 
 	var isDefined = angular.isDefined,
   		isUndefined = angular.isUndefined,
-  		isNumber = angular.isNumber,
+  		isNumber = function(n){ return !isNaN(parseFloat(n)) && isFinite(n);}, // angular's version only matches the type.
   		isObject = angular.isObject,
   		isArray = angular.isArray,
+  		isString = angular.isString,
   		extend = angular.extend,
   		toJson = angular.toJson,
   		fromJson = angular.fromJson,
+  		forEach = angular.forEach,
   		noop = angular.noop;
+
+  	var FIREFOX_SAFARI_STACK_REGEXP = /\S+\:\d+/;
+    var CHROME_IE_STACK_REGEXP = /\s+at /;
 
   	var	isNullOrUndefined = function(val) {
     	return isUndefined(val) || val === null; 
@@ -120,9 +125,233 @@
 				};
 		}]);
 
-	};
+	}
 
 	var _logInterceptor, _exceptionInterceptor;
+
+
+	/*
+	 * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
+	 */
+	
+
+    	function StackFrame(functionName, args, fileName, lineNumber, columnNumber, level) {
+        	if (!isUndefined(functionName)) {
+            	this.setFunctionName(functionName);
+        	}
+        	if (!isUndefined(args)) {
+            	this.setArgs(args);
+       	 	}
+        	if (!isUndefined(fileName)) {
+            	this.setFileName(fileName);
+        	}
+        	if (!isUndefined(lineNumber)) {
+            	this.setLineNumber(lineNumber);
+        	}
+        	if (!isUndefined(columnNumber)) {
+            	this.setColumnNumber(columnNumber);
+        	}
+        	if (!isUndefined(level)) {
+            	this.setLevelNumber(level);
+        	}
+    	}
+
+    	StackFrame.prototype = {
+        	getFunctionName: function () {
+            	return this.method;
+        	},
+        	setFunctionName: function (v) {
+            	this.method = String(v);
+        	},
+
+        	getArgs: function () {
+            	return this.args;
+        	},
+        	setArgs: function (v) {
+            	if (Object.prototype.toString.call(v) !== '[object Array]') {
+                	throw new TypeError('Args must be an Array');
+            	}
+            	this.args = v;
+        	},
+
+        	// NOTE: Property name may be misleading as it includes the path,
+        	// but it somewhat mirrors V8's JavaScriptStackTraceApi
+        	// https://code.google.com/p/v8/wiki/JavaScriptStackTraceApi and Gecko's
+        	// http://mxr.mozilla.org/mozilla-central/source/xpcom/base/nsIException.idl#14
+        	getFileName: function () {
+            	return this.fileName;
+        	},
+        	setFileName: function (v) {
+            	this.fileName = String(v);
+        	},
+
+        	getLineNumber: function () {
+            	return this.line;
+        	},
+        	setLineNumber: function (v) {
+            	if (!isNumber(v)) {
+            		console.log(v);
+            		console.log(isNumber);
+                	throw new TypeError('Line Number must be a Number');
+            	}
+            	this.line = Number(v);
+        	},
+
+        	getColumnNumber: function () {
+            	return this.column;
+        	},
+        	setColumnNumber: function (v) {
+            	if (!isNumber(v)) {
+                	throw new TypeError('Column Number must be a Number');
+            	}
+            	this.column = Number(v);
+        	},
+        	getLevelNumber: function () {
+            	return this.level;
+        	},
+        	setLevelNumber: function (v) {
+            	if (!isNumber(v)) {
+                	throw new TypeError('Level Number must be a Number');
+            	}
+            	this.level = Number(v);
+        	},
+
+        	toString: function() {
+            	var functionName = this.getFunctionName() || '{anonymous}';
+            	var args = '(' + (this.getArgs() || []).join(',') + ')';
+            	var fileName = this.getFileName() ? ('@' + this.getFileName()) : '';
+            	var lineNumber = isNumber(this.getLineNumber()) ? (':' + this.getLineNumber()) : '';
+            	var columnNumber = isNumber(this.getColumnNumber()) ? (':' + this.getColumnNumber()) : '';
+            	return functionName + args + fileName + lineNumber + columnNumber;
+        	}
+    	};
+
+	var exceptionStackParser =  {
+        /**
+         * Given an Error object, extract the most information from it.
+         * @param error {Error}
+         * @return Array[StackFrame]
+         */
+        parse: function ErrorStackParser$$parse(error) {
+            if (typeof error.stacktrace !== 'undefined' || typeof error['opera#sourceloc'] !== 'undefined') {
+                return this.parseOpera(error);
+            } else if (error.stack && error.stack.match(CHROME_IE_STACK_REGEXP)) {
+                return this.parseV8OrIE(error);
+            } else if (error.stack && error.stack.match(FIREFOX_SAFARI_STACK_REGEXP)) {
+                return this.parseFFOrSafari(error);
+            } else {
+                return null;
+            }
+        },
+
+        /**
+         * Separate line and column numbers from a URL-like string.
+         * @param urlLike String
+         * @return Array[String]
+         */
+        extractLocation: function ErrorStackParser$$extractLocation(urlLike) {
+            var locationParts = urlLike.split(':');
+            var lastNumber = locationParts.pop();
+            var possibleNumber = locationParts[locationParts.length - 1];
+            if (!isNaN(parseFloat(possibleNumber)) && isFinite(possibleNumber)) {
+                var lineNumber = locationParts.pop();
+                return [locationParts.join(':'), lineNumber, lastNumber];
+            } else {
+                return [locationParts.join(':'), lastNumber, undefined];
+            }
+        },
+
+        parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
+        	var level =0;
+            return error.stack.split('\n').slice(1).map(function (line) {
+                var tokens = line.replace(/^\s+/, '').split(/\s+/).slice(1);
+                var locationParts = this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, ''));
+                var functionName = (!tokens[0] || tokens[0] === 'Anonymous') ? undefined : tokens[0];
+                return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
+            }, this);
+        },
+
+        parseFFOrSafari: function ErrorStackParser$$parseFFOrSafari(error) {
+        	var level=0;
+            return error.stack.split('\n').filter(function (line) {
+                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP);
+            }, this).map(function (line) {
+                var tokens = line.split('@');
+                var locationParts = this.extractLocation(tokens.pop());
+                var functionName = tokens.shift() || undefined;
+                return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
+            }, this);
+        },
+
+        parseOpera: function ErrorStackParser$$parseOpera(e) {
+            if (!e.stacktrace || (e.message.indexOf('\n') > -1 &&
+                e.message.split('\n').length > e.stacktrace.split('\n').length)) {
+                return this.parseOpera9(e);
+            } else if (!e.stack) {
+                return this.parseOpera10(e);
+            } else {
+                return this.parseOpera11(e);
+            }
+        },
+
+        parseOpera9: function ErrorStackParser$$parseOpera9(e) {
+            var lineRE = /Line (\d+).*script (?:in )?(\S+)/i;
+            var lines = e.message.split('\n');
+            var result = [];
+            var level =0;
+            for (var i = 2, len = lines.length; i < len; i += 2) {
+                var match = lineRE.exec(lines[i]);
+                if (match) {
+                    result.push(new StackFrame(undefined, undefined, match[2], match[1], level++));
+                }
+            }
+
+            return result;
+        },
+
+        parseOpera10: function ErrorStackParser$$parseOpera10(e) {
+            var lineRE = /Line (\d+).*script (?:in )?(\S+)(?:: In function (\S+))?$/i;
+            var lines = e.stacktrace.split('\n');
+            var result = [];
+            var level =0;
+            for (var i = 0, len = lines.length; i < len; i += 2) {
+                var match = lineRE.exec(lines[i]);
+                if (match) {
+                    result.push(new StackFrame(match[3] || undefined, undefined, match[2], match[1], level++));
+                }
+            }
+
+            return result;
+        },
+
+        // Opera 10.65+ Error.stack very similar to FF/Safari
+        parseOpera11: function ErrorStackParser$$parseOpera11(error) {
+            return error.stack.split('\n').filter(function (line) {
+                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP) &&
+                    !line.match(/^Error created at/);
+            }, this).map(function (line) {
+                var tokens = line.split('@');
+                var locationParts = this.extractLocation(tokens.pop());
+                var functionCall = (tokens.shift() || '');
+                var functionName = functionCall
+                        .replace(/<anonymous function(: (\w+))?>/, '$2')
+                        .replace(/\([^\)]*\)/g, '') || undefined;
+                var argsRaw;
+                if (functionCall.match(/\(([^\)]*)\)/)) {
+                    argsRaw = functionCall.replace(/^[^\(]+\(([^\)]*)\)$/, '$1');
+                }
+                var args = (argsRaw === undefined || argsRaw === '[arguments not available]') ? undefined : argsRaw.split(',');
+                return new StackFrame(functionName, args, locationParts[0], locationParts[1], locationParts[2]);
+            }, this);
+        }
+    };
+
+
+
+
+
+	// Application Insights Module
+
 
 	var angularAppInsights = angular.module('ApplicationInsightsModule', ['LocalStorageModule']);
 
@@ -134,14 +363,27 @@
 
 	angularAppInsights.provider('applicationInsightsService', function() {
 		// configuration properties for the provider
-		var _instrumentationKey = '';
-		var _applicationName =''; 
-		var _enableAutoPageViewTracking = true;
+		var _instrumentationKey= '';
+		var _options = {
+			applicationName : '',
+			autoPageViewTracking: true,
+			autoLogTracking: true,
+			autoExceptionTracking: true
+		}
+		
 
 		this.configure = function(instrumentationKey, applicationName, enableAutoPageViewTracking){
-			_instrumentationKey = instrumentationKey;
-			_applicationName = applicationName;
-			_enableAutoPageViewTracking = isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
+			if(isString(applicationName)){
+				console.debug('This method is deprecated. Please call configure(instrumentationKey, options) method.');
+				_instrumentationKey = instrumentationKey;
+				_options.applicationName = applicationName;
+				_options.autoPageViewTracking = isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
+			}
+			else
+			{
+				extend(_options, applicationName);
+				_instrumentationKey = instrumentationKey;
+			}
 		};
 
 
@@ -321,6 +563,10 @@
 			};
 
 			var trackTraceMessage = function(message, level, properties){
+				if(isNullOrUndefined(message) || !isString(message)){
+					return;
+				}
+
 				var data = generateAppInsightsData(_names.traceMessage, 
 											_types.traceMessage,
 											{
@@ -347,15 +593,21 @@
 				if(isNullOrUndefined(exception)){
 					return;
 				}
+
+				// parse the stack
+				var parsedStack = exceptionStackParser.parse(exception);
+
 				var data = generateAppInsightsData(_names.exception,
 													_types.exception,
 													{
 														ver:1,
-														handledAt:'unhandled',
+														handledAt:'Unhandled',
 														exceptions:[{
 																typeName: exception.name,
 																message: exception.message,
-																stack: exception.stack
+																stack: exception.stack,
+																parsedStack: parsedStack,
+																hasFullStack: !isNullOrUndefined(parsedStack)
 															}]
 													});
 				sendData(data);
@@ -391,9 +643,12 @@
 			};
 
 			// set traceTraceMessage as the intercept method of the log decorator
-			_logInterceptor.setInterceptFunction(trackTraceMessage);
-			_exceptionInterceptor.setInterceptFunction(trackException);
-
+			if(_options.autoLogTracking){
+				_logInterceptor.setInterceptFunction(trackTraceMessage);
+			}
+			if(_options.autoExceptionTracking){
+				_exceptionInterceptor.setInterceptFunction(trackException);
+			}
 
 			// public api surface
 			return {
@@ -401,8 +656,8 @@
 				'trackTraceMessage': trackTraceMessage,
 				'trackEvent': trackEvent,
 				'trackMetric': trackMetric,
-				'applicationName': _applicationName,
-				'autoPageViewTracking': _enableAutoPageViewTracking
+				'applicationName': _options.applicationName,
+				'autoPageViewTracking': _options.autoPageViewTracking
 			};
 
 		}
