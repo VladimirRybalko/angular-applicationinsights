@@ -14,6 +14,7 @@ describe('Application Insights for Angular JS Provider', function(){
 		_insights = applicationInsightsService;
 		$httpBackend = $injector.get('$httpBackend');
 		$log = $injector.get('$log');
+		$log.reset();
 	}));
  
  	afterEach(function(){
@@ -40,6 +41,7 @@ describe('Application Insights for Angular JS Provider', function(){
 			$httpBackend.resetExpectations();
 			$httpBackend.expect('POST','https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
+
 				//expect(data.length).to.equal(1);
 				expect(data.name).to.equal('Microsoft.ApplicationInsights.Pageview');
 				expect(data.data.type).to.equal('Microsoft.ApplicationInsights.PageviewData');
@@ -83,8 +85,8 @@ describe('Application Insights for Angular JS Provider', function(){
  
 		});
 
-		// todo : investigate the $log service in tests, as this test causes an exception but works in the app.
-		/*it('Should send data to application insights when messages are written via $log service',function(){
+
+		it('Should send data to application insights when messages are written via $log service',function(){
 			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
 				//expect(data.length).to.equal(1);
@@ -99,7 +101,7 @@ describe('Application Insights for Angular JS Provider', function(){
 
 			$log.debug('this is a message written via the $log serice');
 			$httpBackend.flush();
-		}); */
+		}); 
 	});
 
 	describe('Custom Event Tracking', function(){
@@ -131,6 +133,7 @@ describe('Application Insights for Angular JS Provider', function(){
 				//expect(data.length).to.equal(1);
 				expect(data.name).to.equal('Microsoft.ApplicationInsights.Metric');
 				expect(data.data.item.properties.testProp).to.equal('testValue');
+				expect(data.data.item.metrics[0].value).to.equal(2345);
 				return true;
 			}, function(headers){				
 				return headers['Content-Type'] == 'application/json';

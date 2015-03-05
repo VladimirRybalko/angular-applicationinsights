@@ -32,4 +32,8 @@ controllers.controller('page2Controller',['$scope','applicationInsightsService',
 
 $scope.pageTitle = "Application Insights Demo - Page 2";
 $scope.message = "Page 2";
+$scope.clicked = function (){
+
+	1 + z;
+}
 }]);

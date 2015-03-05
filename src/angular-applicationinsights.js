@@ -9,7 +9,7 @@
 'use strict';
 
 	
-	var _version='angular-0.0.2';
+	var _version='angular:0.1.0';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,
@@ -68,7 +68,6 @@
 		var delegator = function(orignalFn, level){
 			return function( ){
 				var args    = [].slice.call(arguments);
- 
                   // track the call
                   interceptFunction(args[0],level);
                   // Call the original 
@@ -95,14 +94,42 @@
 
 	}
 
-	var _logInterceptor;
+	// Exception interceptor
+	// Intercepts calls to the $exceptionHandler and sends them to Application insights as exception telemetry.
+	function ExceptionInterceptor($provide){
 
+		var origExceptionHandler;
+
+		var interceptFunction = noop;
+
+		this.setInterceptFunction = function(func){
+			interceptFunction = func;
+		};
+
+		this.getPrivateExceptionHanlder = function(){
+			return isNullOrUndefined(origExceptionHandler) ? noop: origExceptionHandler;
+		};
+
+		$provide.decorator('$exceptionHandler',['$delegate',function($delegate){
+				origExceptionHandler = $delegate;
+				return function(exception, cause){
+				  // track the call
+           		  interceptFunction(exception,cause);
+                  // Call the original 
+                  origExceptionHandler(exception,cause);		
+				};
+		}]);
+
+	};
+
+	var _logInterceptor, _exceptionInterceptor;
 
 	var angularAppInsights = angular.module('ApplicationInsightsModule', ['LocalStorageModule']);
 
 	// setup some features that can only be done during the configure pass
 	angularAppInsights.config(['$provide',function ($provide) {
     	 _logInterceptor = new LogInterceptor($provide);
+    	 _exceptionInterceptor = new ExceptionInterceptor($provide);
 	}]);
 
 	angularAppInsights.provider('applicationInsightsService', function() {
@@ -129,19 +156,22 @@
 		function ApplicationInsights(localStorage, $http, $locale, $window, $location){
 			
 			var _log = _logInterceptor.getPrivateLoggingObject(); // so we can log output without causing a recursive loop.
+			var _exceptionHandler = _exceptionInterceptor.getPrivateExceptionHanlder();
 			var _contentType = 'application/json';
 			var _namespace = 'Microsoft.ApplicationInsights.';
 			var _names = {
   				pageViews: _namespace+'Pageview',
   				traceMessage: _namespace +'Message',
   				events: _namespace +'Event',
-  				metrics: _namespace +'Metric'
+  				metrics: _namespace +'Metric',
+  				exception: _namespace + 'Exception'
   			};
   			var _types ={
   				pageViews: _namespace+'PageviewData',
   				traceMessage: _namespace+'MessageData',
   				events: _namespace +'EventData',
-  				metrics: _namespace +'MetricData'
+  				metrics: _namespace +'MetricData',
+  				exception: _namespace +'ExceptionData'
   			};
 
 			var getUUID = function(){
@@ -155,7 +185,7 @@
 				return uuid;
 			};
 
-			var sessionKey = '$$appInsights_session';
+			var sessionKey = '$$appInsights__session';
 			var makeNewSession = function(){
 				// no existing session data
 					var sessionData = {
@@ -203,6 +233,10 @@
 
 			var validateMeasurements = function(measurements)
 			{
+				if(isNullOrUndefined(measurements)){
+					return null;
+				}
+
 				if(!isObject(measurements)){
 					_log.warn('The value of the measurements parameter must be an object consisting of a string/number pairs.');
 					return null;
@@ -223,6 +257,10 @@
 			};
 
 			var validateProperties = function(properties){
+
+				if(isNullOrUndefined(properties)){
+					return null;
+				}
 				
 				if(!isObject(properties)){
 					_log.warn('The value of the properties parameter must be an object consisting of a string/string pairs.');
@@ -305,6 +343,24 @@
 				sendData(data);
 			};
 
+			var trackException = function(exception, cause){
+				if(isNullOrUndefined(exception)){
+					return;
+				}
+				var data = generateAppInsightsData(_names.exception,
+													_types.exception,
+													{
+														ver:1,
+														handledAt:'unhandled',
+														exceptions:[{
+																typeName: exception.name,
+																message: exception.message,
+																stack: exception.stack
+															}]
+													});
+				sendData(data);
+			};
+
 			var generateAppInsightsData = function(payloadName, payloadDataType, payloadData){
 
 				return {
@@ -336,6 +392,8 @@
 
 			// set traceTraceMessage as the intercept method of the log decorator
 			_logInterceptor.setInterceptFunction(trackTraceMessage);
+			_exceptionInterceptor.setInterceptFunction(trackException);
+
 
 			// public api surface
 			return {
