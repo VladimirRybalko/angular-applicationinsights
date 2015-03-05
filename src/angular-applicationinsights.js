@@ -9,7 +9,7 @@
 'use strict';
 
 	
-	var _version='angular:0.1.0';
+	var _version='angular:0.1.1';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,

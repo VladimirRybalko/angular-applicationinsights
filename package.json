@@ -12,7 +12,12 @@
     "telemetry",
     "log collection",
     "metrics",
-    "tracking"
+    "tracking",
+    "analytics",
+    "crash",
+    "analysis",
+    "applicationinsights",
+    "stats"
   ],
   "version": "0.1.0",
   "files": [
