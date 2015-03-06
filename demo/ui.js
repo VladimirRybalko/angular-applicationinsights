@@ -1,7 +1,7 @@
 // ui.js
 
 
-var analyticsDemo = angular.module('appAnalyticsDemo', ['ngRoute','LocalStorageModule','controllers', 'ApplicationInsightsModule']);
+var analyticsDemo = angular.module('appAnalyticsDemo', ['ngRoute','controllers', 'ApplicationInsightsModule']);
 
 analyticsDemo.config(function(applicationInsightsServiceProvider){
     applicationInsightsServiceProvider.configure('60e02de5-021f-42a7-8695-c14df5fb7d08', {

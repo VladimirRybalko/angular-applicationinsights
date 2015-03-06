@@ -17,8 +17,10 @@ module.exports = function(config) {
     files: [
      'node_modules/angular/angular.js',
      'node_modules/angular-mocks/angular-mocks.js',
-     'node_modules/angular-local-storage/dist/angular-local-storage.min.js',
-      'src/*.js',
+      'src/storage.js',
+      'src/stackFrame.js',
+      'src/stackParser.js',
+      'src/angular-applicationinsights.js',
       'test/*.js'
     ],
 
@@ -31,7 +33,10 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
    preprocessors: {
-      'src/*.js': ['coverage']
+      'src/storage.js' :['coverage'],
+      'src/stackFrame.js':['coverage'],
+      'src/stackParser.js':['coverage'],
+      'src/angular-applicationinsights.js':['coverage'],
     },
 
     coverageReporter: {
