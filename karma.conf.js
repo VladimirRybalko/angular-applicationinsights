@@ -33,7 +33,10 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
    preprocessors: {
-      'build/angular-applicationinsights.js': ['coverage']
+      'src/storage.js' :['coverage'],
+      'src/stackFrame.js':['coverage'],
+      'src/stackParser.js':['coverage'],
+      'src/angular-applicationinsights.js':['coverage'],
     },
 
     coverageReporter: {
