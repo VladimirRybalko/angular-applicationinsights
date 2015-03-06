@@ -5,7 +5,9 @@
 (function(root){
 
 	var StackFrame = root.StackFrame;
-
+	
+  	var FIREFOX_SAFARI_STACK_REGEXP = /\S+\:\d+/;
+    var CHROME_IE_STACK_REGEXP = /\s+at /;
 	var exceptionStackParser =  {
         /**
          * Given an Error object, extract the most information from it.

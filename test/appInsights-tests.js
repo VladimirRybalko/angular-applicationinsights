@@ -5,7 +5,7 @@ describe('Application Insights for Angular JS Provider', function(){
 	var $httpBackend;
 	var $log;
 	var $exceptionHandler;
-	beforeEach( module('LocalStorageModule','ApplicationInsightsModule', function(applicationInsightsServiceProvider){
+	beforeEach( module('ApplicationInsightsModule', function(applicationInsightsServiceProvider){
     	applicationInsightsServiceProvider.configure('1234567890','angularjs-appinsights-unittests', false);
 
     }));

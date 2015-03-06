@@ -4,7 +4,8 @@
 
 (function(root){
 
-     var isNumber = function(n){ return !isNaN(parseFloat(n)) && isFinite(n);};
+        var isNumber = function(n){ return !isNaN(parseFloat(n)) && isFinite(n);};
+        var isUndefined = root.angular.isUndefined;
 
     	function StackFrame(functionName, args, fileName, lineNumber, columnNumber, level) {
         	if (!isUndefined(functionName)) {
@@ -49,5 +50,5 @@
 
     	};
 
-    root.Stackframe = StackFrame;
+    root.StackFrame = StackFrame;
  })(root);

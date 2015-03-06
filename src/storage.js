@@ -1,3 +1,7 @@
+/*
+* Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
+*/
+
 (function ( root, angular) {
 /*jshint globalstrict:true*/
 'use strict';
