@@ -23,7 +23,7 @@ bower install angular-applicationinsights
 
      npm i angular-applicationinsights
 
-1. Install the module either from bower, NPM or take the script from the git repository. If using the module directly from the repository, make sure to also get Grevory's angular-local-storage module (https://github.com/grevory/angular-local-storage). 
+1. Install the module either from bower, NPM or clone the repository and run the grunt script. The 'built' script will be in the build/ folder.
 2. Add a reference to the application insights script in your main app view, after the angularJS reference. The path to this file and the angular-local-storage dependency will depend on how you downloaded the script file. 
 3. Add 'ApplicationInsightsModule' to the list of modules required by your application.
 4. Configure the provider during your application module's config phase:
