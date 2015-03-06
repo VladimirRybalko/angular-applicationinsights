@@ -2,10 +2,15 @@
 * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
 */
 
+/* test-code */
+window.root = window.root || {};
+var root = window.root;
+/* end-test-code */
+
 (function(root){
 
 	var StackFrame = root.StackFrame;
-	
+
   	var FIREFOX_SAFARI_STACK_REGEXP = /\S+\:\d+/;
     var CHROME_IE_STACK_REGEXP = /\s+at /;
 	var exceptionStackParser =  {

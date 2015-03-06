@@ -4,6 +4,12 @@
  *  https://github.com/khaines/angular-applicationinsights
  */
 
+ /* test-code */
+window.root = window.root || {};
+window.root.angular = angular;
+var root = window.root;
+/* end-test-code */
+
 (function (angular, errorStackParser, localStorage) {
 /*jshint globalstrict:true*/
 'use strict';
@@ -23,9 +29,6 @@
   		fromJson = angular.fromJson,
   		forEach = angular.forEach,
   		noop = angular.noop;
-
-  	var FIREFOX_SAFARI_STACK_REGEXP = /\S+\:\d+/;
-    var CHROME_IE_STACK_REGEXP = /\s+at /;
 
   	var	isNullOrUndefined = function(val) {
     	return isUndefined(val) || val === null; 

@@ -1,6 +1,10 @@
 /*
 * Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
 */
+/* test-code */
+window.root = window.root || {};
+var root = window.root;
+/* end-test-code */
 
 (function ( root, angular) {
 /*jshint globalstrict:true*/
@@ -174,92 +178,6 @@ function isStringNumber(num) {
       return item;
     };
 
-    // Remove an item from local storage
-    // Example use: localStorageService.remove('library'); // removes the key/value pair of library='angular'
-    var removeFromLocalStorage = function (key) {
-      if (!browserSupportsLocalStorage || self.storageType === 'cookie') {
-        if (!browserSupportsLocalStorage) {
-          $rootScope.$broadcast('LocalStorageModule.notification.warning', 'LOCAL_STORAGE_NOT_SUPPORTED');
-        }
-
-        if (notify.removeItem) {
-          $rootScope.$broadcast('LocalStorageModule.notification.removeitem', {key: key, storageType: 'cookie'});
-        }
-        return removeFromCookies(key);
-      }
-
-      try {
-        webStorage.removeItem(deriveQualifiedKey(key));
-        if (notify.removeItem) {
-          $rootScope.$broadcast('LocalStorageModule.notification.removeitem', {key: key, storageType: self.storageType});
-        }
-      } catch (e) {
-        $rootScope.$broadcast('LocalStorageModule.notification.error', e.message);
-        return removeFromCookies(key);
-      }
-      return true;
-    };
-
-    // Return array of keys for local storage
-    // Example use: var keys = localStorageService.keys()
-    var getKeysForLocalStorage = function () {
-
-      if (!browserSupportsLocalStorage) {
-        $rootScope.$broadcast('LocalStorageModule.notification.warning', 'LOCAL_STORAGE_NOT_SUPPORTED');
-        return false;
-      }
-
-      var prefixLength = prefix.length;
-      var keys = [];
-      for (var key in webStorage) {
-        // Only return keys that are for this app
-        if (key.substr(0,prefixLength) === prefix) {
-          try {
-            keys.push(key.substr(prefixLength));
-          } catch (e) {
-            $rootScope.$broadcast('LocalStorageModule.notification.error', e.Description);
-            return [];
-          }
-        }
-      }
-      return keys;
-    };
-
-    // Remove all data for this app from local storage
-    // Also optionally takes a regular expression string and removes the matching key-value pairs
-    // Example use: localStorageService.clearAll();
-    // Should be used mostly for development purposes
-    var clearAllFromLocalStorage = function (regularExpression) {
-
-      regularExpression = regularExpression || "";
-      //accounting for the '.' in the prefix when creating a regex
-      var tempPrefix = prefix.slice(0, -1);
-      var testRegex = new RegExp(tempPrefix + '.' + regularExpression);
-
-      if (!browserSupportsLocalStorage || self.storageType === 'cookie') {
-        if (!browserSupportsLocalStorage) {
-          $rootScope.$broadcast('LocalStorageModule.notification.warning', 'LOCAL_STORAGE_NOT_SUPPORTED');
-        }
-
-        return clearAllFromCookies();
-      }
-
-      var prefixLength = prefix.length;
-
-      for (var key in webStorage) {
-        // Only remove items that are for this app and match the regular expression
-        if (testRegex.test(key)) {
-          try {
-            removeFromLocalStorage(key.substr(prefixLength));
-          } catch (e) {
-            $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
-            return clearAllFromCookies();
-          }
-        }
-      }
-      return true;
-    };
-
     // Checks the browser to see if cookies are supported
     var browserSupportsCookies = (function() {
       try {
@@ -343,81 +261,21 @@ function isStringNumber(num) {
       return null;
     };
 
-    var removeFromCookies = function (key) {
-      addToCookies(key,null);
-    };
-
-    var clearAllFromCookies = function () {
-      var thisCookie = null, thisKey = null;
-      var prefixLength = prefix.length;
-      var cookies = $document.cookie.split(';');
-      for(var i = 0; i < cookies.length; i++) {
-        thisCookie = cookies[i];
-
-        while (thisCookie.charAt(0) === ' ') {
-          thisCookie = thisCookie.substring(1, thisCookie.length);
-        }
-
-        var key = thisCookie.substring(prefixLength, thisCookie.indexOf('='));
-        removeFromCookies(key);
-      }
-    };
-
     var getStorageType = function() {
       return storageType;
     };
 
-    // Add a listener on scope variable to save its changes to local storage
-    // Return a function which when called cancels binding
-    var bindToScope = function(scope, key, def, lsKey) {
-      lsKey = lsKey || key;
-      var value = getFromLocalStorage(lsKey);
-
-      if (value === null && isDefined(def)) {
-        value = def;
-      } else if (isObject(value) && isObject(def)) {
-        value = extend(def, value);
-      }
-
-      $parse(key).assign(scope, value);
-
-      return scope.$watch(key, function(newVal) {
-        addToLocalStorage(lsKey, newVal);
-      }, isObject(scope[key]));
-    };
-
-    // Return localStorageService.length
-    // ignore keys that not owned
-    var lengthOfLocalStorage = function() {
-      var count = 0;
-      var storage = $window[storageType];
-      for(var i = 0; i < storage.length; i++) {
-        if(storage.key(i).indexOf(prefix) === 0 ) {
-          count++;
-        }
-      }
-      return count;
-    };
 
     return {
       isSupported: browserSupportsLocalStorage,
       getStorageType: getStorageType,
       set: addToLocalStorage,
-      add: addToLocalStorage, //DEPRECATED
       get: getFromLocalStorage,
-      keys: getKeysForLocalStorage,
-      remove: removeFromLocalStorage,
-      clearAll: clearAllFromLocalStorage,
-      bind: bindToScope,
       deriveKey: deriveQualifiedKey,
-      length: lengthOfLocalStorage,
       cookie: {
         isSupported: browserSupportsCookies,
         set: addToCookies,
-        add: addToCookies, //DEPRECATED
-        get: getFromCookies,
-        remove: removeFromCookies,
-        clearAll: clearAllFromCookies
+        get: getFromCookies
       }
     };
   };

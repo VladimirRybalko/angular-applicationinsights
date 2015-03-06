@@ -37,9 +37,22 @@ module.exports = function(grunt) {
         src: ['src/header.js','src/stackFrame.js', 'src/stackParser.js', 'src/storage.js', 'src/angular-applicationinsights.js', 'src/footer.js' ],
         dest: 'build/angular-applicationinsights.js',
       },
+    },
+    
+    strip_code: {
+    options: {
+      start_comment: "test-code",
+      end_comment: "end-test-code",
+    },
+    your_target: {
+      // a list of files you want to strip code from
+      src: "build/*.js"
     }
+  }
+
   });
 
+  grunt.loadNpmTasks('grunt-strip-code');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-karma');
@@ -47,7 +60,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma-coveralls');
 
   
-  grunt.registerTask('default', ['concat','jshint','karma','uglify']);
-  grunt.registerTask('travis',['concat','jshint','karma','uglify','coveralls']);
+  grunt.registerTask('default', ['jshint','karma','concat','strip_code','uglify']);
+  grunt.registerTask('travis',['jshint','karma','concat','strip_code','uglify','coveralls']);
 
 };

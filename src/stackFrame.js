@@ -2,6 +2,13 @@
 * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
 */
 
+/* test-code */
+window.root = window.root || {};
+window.root.angular = angular;
+var root = window.root;
+
+/* end-test-code */
+
 (function(root){
 
         var isNumber = function(n){ return !isNaN(parseFloat(n)) && isFinite(n);};

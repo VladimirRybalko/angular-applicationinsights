@@ -17,7 +17,10 @@ module.exports = function(config) {
     files: [
      'node_modules/angular/angular.js',
      'node_modules/angular-mocks/angular-mocks.js',
-      'build/angular-applicationinsights.js',
+      'src/storage.js',
+      'src/stackFrame.js',
+      'src/stackParser.js',
+      'src/angular-applicationinsights.js',
       'test/*.js'
     ],
 
@@ -34,7 +37,7 @@ module.exports = function(config) {
     },
 
     coverageReporter: {
-      type: 'lcov',
+      type: 'html',
       dir: 'coverage/'
     },
 
@@ -61,7 +64,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS'],//,'Firefox'],
+    browsers: ['PhantomJS','Firefox'],
 
 
     // Continuous Integration mode
