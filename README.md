@@ -28,8 +28,14 @@ bower install angular-applicationinsights
 
 ##### NPM
 ```
-  npm i angular-applicationinsights
+npm i angular-applicationinsights
 ```
+
+##### Nuget
+```
+Install-Package angular-applicationinsights
+```
+
 ####From Source
 ```
 > git clone https://github.com/khaines/angular-applicationinsights.git
