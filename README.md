@@ -1,4 +1,7 @@
 
+
+
+
 angular-applicationinsights
 ===========================
 [![npm version][npm-image]][npm-url] [![license][lic-image]][lic-url] [![Build Status][travisCI-image]][travisCI-url] [![Dependency Status][dep-image]][dep-url] [![Coverage Status][coveralls-image]][coveralls-url] [![Code Climate][cc-image]][cc-url]
@@ -14,27 +17,82 @@ An implementation of Microsoft Application Insights as a 100% AngularJS module. 
     - From the AppInsights Wiki : [Getting an Application Insights Instrumentation Key](https://github.com/Microsoft/AppInsights-Home/wiki#getting-an-application-insights-instrumentation-key) 
 
 
-##### Via Bower
+###Installation
+
+####Via Package 
+
+##### Bower
 ```
 bower install angular-applicationinsights
 ```
 
-##### Via NPM
+##### NPM
+```
+  npm i angular-applicationinsights
+```
+####From Source
+```
+> git clone https://github.com/khaines/angular-applicationinsights.git
+> cd angular-applicationinsights
+> npm install
+> grunt
+```
+Note: the angular-applicationinsights.js file will be in the **build/** folder after running *grunt*.
 
-     npm i angular-applicationinsights
 
-1. Install the module either from bower, NPM or clone the repository and run the grunt script. The 'built' script will be in the build/ folder.
-2. Add a reference to the application insights script in your main app view, after the angularJS reference. The path to this file and the angular-local-storage dependency will depend on how you downloaded the script file. 
-3. Add 'ApplicationInsightsModule' to the list of modules required by your application.
-4. Configure the provider during your application module's config phase:
-    
-    ```Javascript
-    myAmazingApp.config(function(applicationInsightsServiceProvider){
-        applicationInsightsServiceProvider.configure('<PUT YOUR APPLICATION INSIGHTS KEY HERE', 'myAmazingApp');
+###Setup
+
+Add a reference to the *angular-applicationinsights.js* file in your main html file:
+```HTML
+   <!-- load angular and angular routes via CDN -->
+   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.js"></script>
+   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular-route.js"></script>
+	<!-- load application insights after the angular script, but before your main application module -->
+   <script src="build/angular-applicationinsights.js"></script>
+   <script language="javascript">
+		var amazingApp = angular.module('amazingApp', ['ApplicationsInsightsModule']);
+   </script>
+```
+Configure the provider during your application module's config phase:
+```Javascript
+<script language="javascript">
+	var amazingApp = angular.module('amazingApp', ['ApplicationsInsightsModule']);
+
+	amazingApp.config(function(applicationInsightsServiceProvider){
+		var options = {applicationName:'amazingApp'};
+		// Configuration options are described below 	 
+        applicationInsightsServiceProvider.configure('<PUT YOUR APPLICATION INSIGHTS KEY HERE', options );
     })
-    ```
-5. Start using your application. In the default configuration the Application Insights module will automatically track view changes and $log events, sending the telemetry to Microsoft Application Insights.
+ </script>
+```
+ Basic automatic telemetry will be gathered out of the box, but for a direct reference inject the _applicationInsightsService_ into your code:
+```Javascript
+	amazingApp.controller('mainController',['applicationInsightsService',function(applicationInsightsService){
+	applicationInsightsService.trackEvent('An amazing Event happened');
+}]);
 
+```
+
+###Configuration
+The options object passed to the _**configure**( iKey, options )_  has a number of valid settings. Their names and default values are as follows:
+```Javascript
+var options = {
+	// applicationName: used as a 'friendly name' prefix to url paths
+	// ex: myAmazingapp/mainView
+	applicationName:'',
+	// autoPageViewTracking: enables the sending a event to Application Insights when 
+	// ever the $locationChangeSuccess event is fired on the rootScope
+	autoPageViewTracking: true,
+	// autoLogTracking: enables the interception of calls to the $log service and have the trace 
+	// data sent to Application Insights.
+	autoLogTracking: true,
+	// autoExceptionTracking: enables calls to the $exceptionHandler service, usually unhandled exceptions, to have the error and stack data sent to Application Insights.
+	autoExceptionTracking: true,
+	// sessionInactivityTimeout: The time (in milliseconds) that a user session can be inactive, before a new session will be created (on the next api call). Default is 30mins.
+	sessionInactivityTimeout: 1800000
+	};
+	
+```
 
 ## API Reference
 
