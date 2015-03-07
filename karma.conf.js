@@ -10,7 +10,7 @@ module.exports = function(config) {
 
     // frameworks to use
     // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['mocha', 'sinon-chai'],
+    frameworks: ['jasmine'],
 
 
     // list of files / patterns to load in the browser
@@ -21,6 +21,8 @@ module.exports = function(config) {
       'src/stackFrame.js',
       'src/stackParser.js',
       'src/angular-applicationinsights.js',
+      'test/captured-errors.js',
+      'test/test-helper.js',
       'test/*.js'
     ],
 
@@ -67,7 +69,7 @@ module.exports = function(config) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS','Firefox'],
+    browsers: ['PhantomJS'],
 
 
     // Continuous Integration mode

@@ -12,7 +12,7 @@
         <description>An implementation of Microsoft Application Insights as a 100% AngularJS module. This module does not utilize the offical Application Insights Javascript SDK, in order to avoid depending on global code outside of the AngularJS platform scope.</description>
         <summary>An implementation of Microsoft Application Insights as a 100% AngularJS module</summary>
         <copyright>Copyright (c) 2015 Ken Haines</copyright>
-        <tags>angularjs applicationinsights appinsights metrics angular spa telemetry exceptions crashes analytics</tags>
+        <tags>angularjs applicationinsights appinsights metrics angular spa log telemetry exceptions crashes analytics</tags>
     </metadata>
     <files>
         <file src="dist\angular-applicationinsights.js" target="content\scripts\angular-applicationinsights.js" />

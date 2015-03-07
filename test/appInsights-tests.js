@@ -27,11 +27,11 @@ describe('Application Insights for Angular JS Provider', function(){
 	describe('Configuration Settings', function(){
 
 		it('Should remember the configured application name', function(){
-      		expect(_insights.applicationName).to.equal('angularjs-appinsights-unittests');
+      		expect(_insights.applicationName).toEqual('angularjs-appinsights-unittests');
     	});
 
     	it('Should remember that automatic pageview tracking is disabled for tests', function(){
-    		expect(_insights.autoPageViewTracking).to.equal(false);
+    		expect(_insights.autoPageViewTracking).toEqual(false);
     	});
 	});
 
@@ -43,18 +43,18 @@ describe('Application Insights for Angular JS Provider', function(){
 			$httpBackend.expect('POST','https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
 
-				//expect(data.length).to.equal(1);
-				expect(data.name).to.equal('Microsoft.ApplicationInsights.Pageview');
-				expect(data.data.type).to.equal('Microsoft.ApplicationInsights.PageviewData');
-				expect(data.data.item.ver).to.equal(1);
-				expect(data.data.item.url).to.equal('http://www.somewhere.com/sometest/page');
-				expect(data.data.item.properties.testprop).to.equal('testvalue');
-				expect(data.data.item.measurements.metric1).to.equal(2345);
+				//expect(data.length).toEqual(1);
+				expect(data.name).toEqual('Microsoft.ApplicationInsights.Pageview');
+				expect(data.data.type).toEqual('Microsoft.ApplicationInsights.PageviewData');
+				expect(data.data.item.ver).toEqual(1);
+				expect(data.data.item.url).toEqual('http://www.somewhere.com/sometest/page');
+				expect(data.data.item.properties.testprop).toEqual('testvalue');
+				expect(data.data.item.measurements.metric1).toEqual(2345);
 
 
 				return true;
 			}, function(headers){
-				expect(headers['Content-Type']).to.equal('application/json');				
+				expect(headers['Content-Type']).toEqual('application/json');				
 				return headers['Content-Type'] == 'application/json';
 			})
 			.respond(200,'');
@@ -72,8 +72,8 @@ describe('Application Insights for Angular JS Provider', function(){
 
 			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
-				//expect(data.length).to.equal(1);
-				expect(data.name).to.equal('Microsoft.ApplicationInsights.Message');
+				//expect(data.length).toEqual(1);
+				expect(data.name).toEqual('Microsoft.ApplicationInsights.Message');
 
 				return true;
 			}, function(headers){				
@@ -90,9 +90,9 @@ describe('Application Insights for Angular JS Provider', function(){
 		it('Should send data to application insights when messages are written via $log service',function(){
 			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
-				//expect(data.length).to.equal(1);
-				expect(data.name).to.equal('Microsoft.ApplicationInsights.Message');
-				expect(data.data.item.message).to.equal('this is a message written via the $log serice');
+				//expect(data.length).toEqual(1);
+				expect(data.name).toEqual('Microsoft.ApplicationInsights.Message');
+				expect(data.data.item.message).toEqual('this is a message written via the $log serice');
 
 				return true;
 			}, function(headers){				
@@ -111,8 +111,8 @@ describe('Application Insights for Angular JS Provider', function(){
 
 			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
-				//expect(data.length).to.equal(1);
-				expect(data.name).to.equal('Microsoft.ApplicationInsights.Event');
+				//expect(data.length).toEqual(1);
+				expect(data.name).toEqual('Microsoft.ApplicationInsights.Event');
 
 				return true;
 			}, function(headers){				
@@ -131,10 +131,10 @@ describe('Application Insights for Angular JS Provider', function(){
 
 			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
-				//expect(data.length).to.equal(1);
-				expect(data.name).to.equal('Microsoft.ApplicationInsights.Metric');
-				expect(data.data.item.properties.testProp).to.equal('testValue');
-				expect(data.data.item.metrics[0].value).to.equal(2345);
+				//expect(data.length).toEqual(1);
+				expect(data.name).toEqual('Microsoft.ApplicationInsights.Metric');
+				expect(data.data.item.properties.testProp).toEqual('testValue');
+				expect(data.data.item.metrics[0].value).toEqual(2345);
 				return true;
 			}, function(headers){				
 				return headers['Content-Type'] == 'application/json';
@@ -153,9 +153,9 @@ describe('Application Insights for Angular JS Provider', function(){
 
 			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
 				var data = JSON.parse(json);
-				//expect(data.length).to.equal(1);
+				//expect(data.length).toEqual(1);
 
-				expect(data.name).to.equal('Microsoft.ApplicationInsights.Exception');
+				expect(data.name).toEqual('Microsoft.ApplicationInsights.Exception');
 				return true;
 			}, function(headers){				
 				return headers['Content-Type'] == 'application/json';
