@@ -21,6 +21,9 @@ var root = window.root;
             if (!isUndefined(columnNumber)) {
                 this.setColumnNumber(columnNumber);
             }
+            if (!isUndefined(args)) {
+                this.setArgs(args);
+            }
         	if (!isUndefined(fileName)) {
             	this.setFileName(fileName);
         	}

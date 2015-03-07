@@ -4,9 +4,17 @@ describe('ErrorStackParser', function () {
 
     describe('#parse', function () {
         var unit = window.root.errorStackParser;
+
         it('should not parse IE 9 Error', function() {
         	var stack =  unit.parse(CapturedExceptions.IE_9);
             expect(stack).toEqual(null);
+        });
+
+        it('should output stack frames in a readable format', function(){
+        	var stackFrames = unit.parse(CapturedExceptions.SAFARI_6);
+            expect(stackFrames).toBeTruthy();
+            expect(stackFrames.length).toBe(3);
+            expect(stackFrames[1].toString()).toEqual('dumpException3()@http://path/to/file.js:52');
         });
 
         it('should parse Safari 6 Error.stack', function () {
