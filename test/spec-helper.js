@@ -32,9 +32,8 @@ beforeEach(function() {
                     message += 'expected columnNumber: ' + actual.getColumnNumber() + ' to equal ' + expected[4] + '\n';
                 }
 
-                //this.message = function() { return message };
                 return {
-                    pass: message == '' ? true:false,
+                    pass: message === '' ? true:false,
                     message: message
                 };
             }
