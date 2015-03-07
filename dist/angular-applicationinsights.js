@@ -1,15 +1,545 @@
+// Code here will be linted with JSHint.
+/* jshint ignore:start */
+(function(angular){
+	var root = {};
+	root.angular = angular;
+// Code here will be ignored by JSHint.
+/* jshint ignore:end */
+/*
+* Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
+*/
+
+
+
+(function(root){
+
+        var isNumber = function(n){ return !isNaN(parseFloat(n)) && isFinite(n);};
+        var isUndefined = root.angular.isUndefined;
+
+    	function StackFrame(functionName, args, fileName, lineNumber, columnNumber, level) {
+        	if (!isUndefined(functionName)) {
+            	this.setFunctionName(functionName);
+        	}
+            if (!isUndefined(columnNumber)) {
+                this.setColumnNumber(columnNumber);
+            }
+            if (!isUndefined(args)) {
+                this.setArgs(args);
+            }
+        	if (!isUndefined(fileName)) {
+            	this.setFileName(fileName);
+        	}
+        	if (!isUndefined(lineNumber)) {
+            	this.setLineNumber(lineNumber);
+        	}
+
+        	if (!isUndefined(level)) {
+            	this.setLevelNumber(level);
+        	}
+    	}
+
+    	StackFrame.prototype = {
+
+            getFunctionName: function () {
+                return this.method;
+            },
+        	setFunctionName: function (v) {
+            	this.method = String(v);
+        	},
+            getArgs: function () {
+                return this.args;
+            },
+            setArgs: function (v) {
+                if (Object.prototype.toString.call(v) !== '[object Array]') {
+                    throw new TypeError('Args must be an Array');
+                }
+                this.args = v;
+            },
+            // NOTE: Property name may be misleading as it includes the path,
+            // but it somewhat mirrors V8's JavaScriptStackTraceApi
+            // https://code.google.com/p/v8/wiki/JavaScriptStackTraceApi and Gecko's
+            // http://mxr.mozilla.org/mozilla-central/source/xpcom/base/nsIException.idl#14
+            getFileName: function () {
+                return this.fileName;
+            },
+        	setFileName: function (v) {
+            	this.fileName = String(v);
+        	},
+            getLineNumber: function () {
+                return this.line;
+            },
+        	setLineNumber: function (v) {
+            	if (!isNumber(v)) {
+
+                	this.line = undefined;
+                    return;
+            	}
+            	this.line = Number(v);
+        	},
+            getColumnNumber: function () {
+                 return this.columnNumber;
+            },
+            setColumnNumber: function (v) {
+                 if (!isNumber(v)) {
+                    this.columnNumber = undefined;
+                    return;
+                }
+                this.columnNumber = Number(v);
+            },
+        	setLevelNumber: function (v) {
+            	if (!isNumber(v)) {
+                	throw new TypeError('Level Number must be a Number');
+            	}
+            	this.level = Number(v);
+        	},
+            toString: function() {
+                var functionName = this.getFunctionName() || '{anonymous}';
+                var args = '(' + (this.getArgs() || []).join(',') + ')';
+                var fileName = this.getFileName() ? ('@' + this.getFileName()) : '';
+                var lineNumber = isNumber(this.getLineNumber()) ? (':' + this.getLineNumber()) : '';
+                var columnNumber = isNumber(this.getColumnNumber()) ? (':' + this.getColumnNumber()) : '';
+                return functionName + args + fileName + lineNumber + columnNumber;
+            }
+
+    	};
+
+    root.StackFrame = StackFrame;
+ })(root);
+/*
+* Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
+*/
+
+
+
+(function(root){
+
+	var StackFrame = root.StackFrame;
+
+  	var FIREFOX_SAFARI_STACK_REGEXP = /\S+\:\d+/;
+    var CHROME_IE_STACK_REGEXP = /\s+at /;
+	var exceptionStackParser =  {
+        /**
+         * Given an Error object, extract the most information from it.
+         * @param error {Error}
+         * @return Array[StackFrame]
+         */
+        parse: function ErrorStackParser$$parse(error) {
+            if (typeof error.stacktrace !== 'undefined' || typeof error['opera#sourceloc'] !== 'undefined') {
+                return this.parseOpera(error);
+            } else if (error.stack && error.stack.match(CHROME_IE_STACK_REGEXP)) {
+                return this.parseV8OrIE(error);
+            } else if (error.stack && error.stack.match(FIREFOX_SAFARI_STACK_REGEXP)) {
+                return this.parseFFOrSafari(error);
+            } else {
+                return null;
+            }
+        },
+
+        /**
+         * Separate line and column numbers from a URL-like string.
+         * @param urlLike String
+         * @return Array[String]
+         */
+        extractLocation: function ErrorStackParser$$extractLocation(urlLike) {
+            // Guard against strings like "(native)"
+            if (urlLike.indexOf(':') === -1) {
+                return [];
+            }
+
+            var locationParts = urlLike.split(':');
+            var lastNumber = locationParts.pop();
+            var possibleNumber = locationParts[locationParts.length - 1];
+            if (!isNaN(parseFloat(possibleNumber)) && isFinite(possibleNumber)) {
+                var lineNumber = locationParts.pop();
+                return [locationParts.join(':'), lineNumber, lastNumber];
+            } else {
+                return [locationParts.join(':'), lastNumber, undefined];
+            }
+        },
+
+        parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
+        	var level =0;
+            return error.stack.split('\n').slice(1).map(function (line) {
+                var tokens = line.replace(/^\s+/, '').split(/\s+/).slice(1);
+                var locationParts = this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, ''));
+                var functionName = (!tokens[0] || tokens[0] === 'Anonymous') ? undefined : tokens[0];
+                return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
+            }, this);
+        },
+
+        parseFFOrSafari: function ErrorStackParser$$parseFFOrSafari(error) {
+        	var level=0;
+            return error.stack.split('\n').filter(function (line) {
+                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP);
+            }, this).map(function (line) {
+                var tokens = line.split('@');
+                var locationParts = this.extractLocation(tokens.pop());
+                var functionName = tokens.shift() || undefined;
+                return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
+            }, this);
+        },
+
+        parseOpera: function ErrorStackParser$$parseOpera(e) {
+            if (!e.stacktrace || (e.message.indexOf('\n') > -1 &&
+                e.message.split('\n').length > e.stacktrace.split('\n').length)) {
+                return this.parseOpera9(e);
+            } else if (!e.stack) {
+                return this.parseOpera10(e);
+            } else {
+                return this.parseOpera11(e);
+            }
+        },
+
+        parseOpera9: function ErrorStackParser$$parseOpera9(e) {
+            var lineRE = /Line (\d+).*script (?:in )?(\S+)/i;
+            var lines = e.message.split('\n');
+            var result = [];
+            var level =0;
+            for (var i = 2, len = lines.length; i < len; i += 2) {
+                var match = lineRE.exec(lines[i]);
+                if (match) {
+                    result.push(new StackFrame(undefined, undefined, match[2], match[1], undefined, level++));
+                }
+            }
+
+            return result;
+        },
+
+        parseOpera10: function ErrorStackParser$$parseOpera10(e) {
+            var lineRE = /Line (\d+).*script (?:in )?(\S+)(?:: In function (\S+))?$/i;
+            var lines = e.stacktrace.split('\n');
+            var result = [];
+            var level =0;
+            for (var i = 0, len = lines.length; i < len; i += 2) {
+                var match = lineRE.exec(lines[i]);
+                if (match) {
+                    result.push(new StackFrame(match[3] || undefined, undefined, match[2], match[1], undefined, level++));
+                }
+            }
+
+            return result;
+        },
+
+        // Opera 10.65+ Error.stack very similar to FF/Safari
+        parseOpera11: function ErrorStackParser$$parseOpera11(error) {
+            var level =0;
+            return error.stack.split('\n').filter(function (line) {
+                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP) &&
+                    !line.match(/^Error created at/);
+            }, this).map(function (line) {
+                var tokens = line.split('@');
+                var locationParts = this.extractLocation(tokens.pop());
+                var functionCall = (tokens.shift() || '');
+                var functionName = functionCall
+                        .replace(/<anonymous function(: (\w+))?>/, '$2')
+                        .replace(/\([^\)]*\)/g, '') || undefined;
+                var argsRaw;
+                if (functionCall.match(/\(([^\)]*)\)/)) {
+                    argsRaw = functionCall.replace(/^[^\(]+\(([^\)]*)\)$/, '$1');
+                }
+                var args = (argsRaw === undefined || argsRaw === '[arguments not available]') ? undefined : argsRaw.split(',');
+                return new StackFrame(functionName, args, locationParts[0], locationParts[1], locationParts[2],level++);
+            }, this);
+        }
+    };
+
+    root.errorStackParser = exceptionStackParser;
+
+})(root);
+/*
+* Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
+*/
+
+
+(function ( root, angular) {
+/*jshint globalstrict:true*/
+'use strict';
+
+var isDefined = angular.isDefined,
+  isUndefined = angular.isUndefined,
+  isNumber = angular.isNumber,
+  isObject = angular.isObject,
+  isArray = angular.isArray,
+  extend = angular.extend,
+  toJson = angular.toJson,
+  fromJson = angular.fromJson;
+
+
+// Test if string is only contains numbers
+// e.g '1' => true, "'1'" => true
+function isStringNumber(num) {
+  return  /^-?\d+\.?\d*$/.test(num.replace(/["']/g, ''));
+}
+
+
+  var defaultConfig ={
+  // You should set a prefix to avoid overwriting any local storage variables from the rest of your app
+  // e.g. localStorageServiceProvider.setPrefix('youAppName');
+  // With provider you can use config as this:
+  // myApp.config(function (localStorageServiceProvider) {
+  //    localStorageServiceProvider.prefix = 'yourAppName';
+  // });
+    prefix : 'ls',
+
+  // You could change web storage type localstorage or sessionStorage
+    storageType : 'localStorage',
+
+  // Cookie options (usually in case of fallback)
+  // expiry = Number of days before cookies expire // 0 = Does not expire
+  // path = The web path the cookie represents
+    cookie : {
+      expiry: 30,
+      path: '/'
+    },
+
+  // Send signals for each of the following actions?
+    notify : {
+      setItem: true,
+      removeItem: false
+    }
+  };
+
+ 
+
+  root.storage = function(settings) {
+
+    var config = extend(defaultConfig, settings);
+    var self = config;
+    var prefix = config.prefix;
+    var cookie = config.cookie;
+    var notify = config.notify;
+    var storageType = config.storageType;
+    var webStorage;
+    var $rootScope = config.rootScope;
+    var $window = config.window;
+    var $document = config.document;
+    var $parse = config.parse;
+
+
+    // When Angular's $document is not available
+    if (!$document) {
+      $document = document;
+    } else if ($document[0]) {
+      $document = $document[0];
+    }
+
+    // If there is a prefix set in the config lets use that with an appended period for readability
+    if (prefix.substr(-1) !== '.') {
+      prefix = !!prefix ? prefix + '.' : '';
+    }
+    var deriveQualifiedKey = function(key) {
+      return prefix + key;
+    };
+    // Checks the browser to see if local storage is supported
+    var browserSupportsLocalStorage = (function () {
+      try {
+        var supported = (storageType in $window && $window[storageType] !== null);
+
+        // When Safari (OS X or iOS) is in private browsing mode, it appears as though localStorage
+        // is available, but trying to call .setItem throws an exception.
+        //
+        // "QUOTA_EXCEEDED_ERR: DOM Exception 22: An attempt was made to add something to storage
+        // that exceeded the quota."
+        var key = deriveQualifiedKey('__' + Math.round(Math.random() * 1e7));
+        if (supported) {
+          webStorage = $window[storageType];
+          webStorage.setItem(key, '');
+          webStorage.removeItem(key);
+        }
+
+        return supported;
+      } catch (e) {
+        storageType = 'cookie';
+        $rootScope.$broadcast('LocalStorageModule.notification.error', e.message);
+        return false;
+      }
+    }());
+
+
+
+    // Directly adds a value to local storage
+    // If local storage is not available in the browser use cookies
+    // Example use: localStorageService.add('library','angular');
+    var addToLocalStorage = function (key, value) {
+      // Let's convert undefined values to null to get the value consistent
+      if (isUndefined(value)) {
+        value = null;
+      } else if (isObject(value) || isArray(value) || isNumber(+value || value)) {
+        value = toJson(value);
+      }
+
+      // If this browser does not support local storage use cookies
+      if (!browserSupportsLocalStorage || self.storageType === 'cookie') {
+        if (!browserSupportsLocalStorage) {
+            $rootScope.$broadcast('LocalStorageModule.notification.warning', 'LOCAL_STORAGE_NOT_SUPPORTED');
+        }
+
+        if (notify.setItem) {
+          $rootScope.$broadcast('LocalStorageModule.notification.setitem', {key: key, newvalue: value, storageType: 'cookie'});
+        }
+        return addToCookies(key, value);
+      }
+
+      try {
+        if (isObject(value) || isArray(value)) {
+          value = toJson(value);
+        }
+        if (webStorage) {
+          webStorage.setItem(deriveQualifiedKey(key), value);
+        }
+        if (notify.setItem) {
+          $rootScope.$broadcast('LocalStorageModule.notification.setitem', {key: key, newvalue: value, storageType: self.storageType});
+        }
+      } catch (e) {
+        $rootScope.$broadcast('LocalStorageModule.notification.error', e.message);
+        return addToCookies(key, value);
+      }
+      return true;
+    };
+
+    // Directly get a value from local storage
+    // Example use: localStorageService.get('library'); // returns 'angular'
+    var getFromLocalStorage = function (key) {
+
+      if (!browserSupportsLocalStorage || self.storageType === 'cookie') {
+        if (!browserSupportsLocalStorage) {
+          $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
+        }
+
+        return getFromCookies(key);
+      }
+
+      var item = webStorage ? webStorage.getItem(deriveQualifiedKey(key)) : null;
+      // angular.toJson will convert null to 'null', so a proper conversion is needed
+      // FIXME not a perfect solution, since a valid 'null' string can't be stored
+      if (!item || item === 'null') {
+        return null;
+      }
+
+      if (item.charAt(0) === "{" || item.charAt(0) === "[" || isStringNumber(item)) {
+        return fromJson(item);
+      }
+
+      return item;
+    };
+
+    // Checks the browser to see if cookies are supported
+    var browserSupportsCookies = (function() {
+      try {
+        return $window.navigator.cookieEnabled ||
+          ("cookie" in $document && ($document.cookie.length > 0 ||
+          ($document.cookie = "test").indexOf.call($document.cookie, "test") > -1));
+      } catch (e) {
+          $rootScope.$broadcast('LocalStorageModule.notification.error', e.message);
+          return false;
+      }
+    }());
+
+    // Directly adds a value to cookies
+    // Typically used as a fallback is local storage is not available in the browser
+    // Example use: localStorageService.cookie.add('library','angular');
+    var addToCookies = function (key, value) {
+
+      if (isUndefined(value)) {
+        return false;
+      } else if(isArray(value) || isObject(value)) {
+        value = toJson(value);
+      }
+
+      if (!browserSupportsCookies) {
+        $rootScope.$broadcast('LocalStorageModule.notification.error', 'COOKIES_NOT_SUPPORTED');
+        return false;
+      }
+
+      try {
+        var expiry = '',
+            expiryDate = new Date(),
+            cookieDomain = '';
+
+        if (value === null) {
+          // Mark that the cookie has expired one day ago
+          expiryDate.setTime(expiryDate.getTime() + (-1 * 24 * 60 * 60 * 1000));
+          expiry = "; expires=" + expiryDate.toGMTString();
+          value = '';
+        } else if (cookie.expiry !== 0) {
+          expiryDate.setTime(expiryDate.getTime() + (cookie.expiry * 24 * 60 * 60 * 1000));
+          expiry = "; expires=" + expiryDate.toGMTString();
+        }
+        if (!!key) {
+          var cookiePath = "; path=" + cookie.path;
+          if(cookie.domain){
+            cookieDomain = "; domain=" + cookie.domain;
+          }
+          $document.cookie = deriveQualifiedKey(key) + "=" + encodeURIComponent(value) + expiry + cookiePath + cookieDomain;
+        }
+      } catch (e) {
+        $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
+        return false;
+      }
+      return true;
+    };
+
+    // Directly get a value from a cookie
+    // Example use: localStorageService.cookie.get('library'); // returns 'angular'
+    var getFromCookies = function (key) {
+      if (!browserSupportsCookies) {
+        $rootScope.$broadcast('LocalStorageModule.notification.error', 'COOKIES_NOT_SUPPORTED');
+        return false;
+      }
+
+      var cookies = $document.cookie && $document.cookie.split(';') || [];
+      for(var i=0; i < cookies.length; i++) {
+        var thisCookie = cookies[i];
+        while (thisCookie.charAt(0) === ' ') {
+          thisCookie = thisCookie.substring(1,thisCookie.length);
+        }
+        if (thisCookie.indexOf(deriveQualifiedKey(key) + '=') === 0) {
+          var storedValues = decodeURIComponent(thisCookie.substring(prefix.length + key.length + 1, thisCookie.length));
+          try{
+            var obj = JSON.parse(storedValues);
+            return fromJson(obj);
+          }catch(e){
+            return storedValues;
+          }
+        }
+      }
+      return null;
+    };
+
+    var getStorageType = function() {
+      return storageType;
+    };
+
+
+    return {
+      isSupported: browserSupportsLocalStorage,
+      getStorageType: getStorageType,
+      set: addToLocalStorage,
+      get: getFromLocalStorage,
+      deriveKey: deriveQualifiedKey,
+      cookie: {
+        isSupported: browserSupportsCookies,
+        set: addToCookies,
+        get: getFromCookies
+      }
+    };
+  };
+
+})( root, window.angular );
 /*
  *  angular-applicationinsights
  *	An angularJS module for using Microsoft Application Insights
  *  https://github.com/khaines/angular-applicationinsights
  */
 
-(function (angular) {
+
+
+(function (angular, errorStackParser, localStorage) {
 /*jshint globalstrict:true*/
 'use strict';
 
 	
-	var _version='angular:0.1.2';
+	var _version='angular:0.2.0';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,
@@ -23,9 +553,6 @@
   		fromJson = angular.fromJson,
   		forEach = angular.forEach,
   		noop = angular.noop;
-
-  	var FIREFOX_SAFARI_STACK_REGEXP = /\S+\:\d+/;
-    var CHROME_IE_STACK_REGEXP = /\s+at /;
 
   	var	isNullOrUndefined = function(val) {
     	return isUndefined(val) || val === null; 
@@ -130,183 +657,8 @@
 	var _logInterceptor, _exceptionInterceptor;
 
 
-	/*
-	 * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
-	 */
-	
-
-    	function StackFrame(functionName, args, fileName, lineNumber, columnNumber, level) {
-        	if (!isUndefined(functionName)) {
-            	this.setFunctionName(functionName);
-        	}
-        
-        	if (!isUndefined(fileName)) {
-            	this.setFileName(fileName);
-        	}
-        	if (!isUndefined(lineNumber)) {
-            	this.setLineNumber(lineNumber);
-        	}
-
-        	if (!isUndefined(level)) {
-            	this.setLevelNumber(level);
-        	}
-    	}
-
-    	StackFrame.prototype = {
-
-        	setFunctionName: function (v) {
-            	this.method = String(v);
-        	},
-
-        	setFileName: function (v) {
-            	this.fileName = String(v);
-        	},
-
-        	setLineNumber: function (v) {
-            	if (!isNumber(v)) {
-                	throw new TypeError('Line Number must be a Number');
-            	}
-            	this.line = Number(v);
-        	},
-
-
-        	setLevelNumber: function (v) {
-            	if (!isNumber(v)) {
-                	throw new TypeError('Level Number must be a Number');
-            	}
-            	this.level = Number(v);
-        	},
-
-    	};
-
-	var exceptionStackParser =  {
-        /**
-         * Given an Error object, extract the most information from it.
-         * @param error {Error}
-         * @return Array[StackFrame]
-         */
-        parse: function ErrorStackParser$$parse(error) {
-            if (typeof error.stacktrace !== 'undefined' || typeof error['opera#sourceloc'] !== 'undefined') {
-                return this.parseOpera(error);
-            } else if (error.stack && error.stack.match(CHROME_IE_STACK_REGEXP)) {
-                return this.parseV8OrIE(error);
-            } else if (error.stack && error.stack.match(FIREFOX_SAFARI_STACK_REGEXP)) {
-                return this.parseFFOrSafari(error);
-            } else {
-                return null;
-            }
-        },
-
-        /**
-         * Separate line and column numbers from a URL-like string.
-         * @param urlLike String
-         * @return Array[String]
-         */
-        extractLocation: function ErrorStackParser$$extractLocation(urlLike) {
-            var locationParts = urlLike.split(':');
-            var lastNumber = locationParts.pop();
-            var possibleNumber = locationParts[locationParts.length - 1];
-            if (!isNaN(parseFloat(possibleNumber)) && isFinite(possibleNumber)) {
-                var lineNumber = locationParts.pop();
-                return [locationParts.join(':'), lineNumber, lastNumber];
-            } else {
-                return [locationParts.join(':'), lastNumber, undefined];
-            }
-        },
-
-        parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
-        	var level =0;
-            return error.stack.split('\n').slice(1).map(function (line) {
-                var tokens = line.replace(/^\s+/, '').split(/\s+/).slice(1);
-                var locationParts = this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, ''));
-                var functionName = (!tokens[0] || tokens[0] === 'Anonymous') ? undefined : tokens[0];
-                return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
-            }, this);
-        },
-
-        parseFFOrSafari: function ErrorStackParser$$parseFFOrSafari(error) {
-        	var level=0;
-            return error.stack.split('\n').filter(function (line) {
-                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP);
-            }, this).map(function (line) {
-                var tokens = line.split('@');
-                var locationParts = this.extractLocation(tokens.pop());
-                var functionName = tokens.shift() || undefined;
-                return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
-            }, this);
-        },
-
-        parseOpera: function ErrorStackParser$$parseOpera(e) {
-            if (!e.stacktrace || (e.message.indexOf('\n') > -1 &&
-                e.message.split('\n').length > e.stacktrace.split('\n').length)) {
-                return this.parseOpera9(e);
-            } else if (!e.stack) {
-                return this.parseOpera10(e);
-            } else {
-                return this.parseOpera11(e);
-            }
-        },
-
-        parseOpera9: function ErrorStackParser$$parseOpera9(e) {
-            var lineRE = /Line (\d+).*script (?:in )?(\S+)/i;
-            var lines = e.message.split('\n');
-            var result = [];
-            var level =0;
-            for (var i = 2, len = lines.length; i < len; i += 2) {
-                var match = lineRE.exec(lines[i]);
-                if (match) {
-                    result.push(new StackFrame(undefined, undefined, match[2], match[1], level++));
-                }
-            }
-
-            return result;
-        },
-
-        parseOpera10: function ErrorStackParser$$parseOpera10(e) {
-            var lineRE = /Line (\d+).*script (?:in )?(\S+)(?:: In function (\S+))?$/i;
-            var lines = e.stacktrace.split('\n');
-            var result = [];
-            var level =0;
-            for (var i = 0, len = lines.length; i < len; i += 2) {
-                var match = lineRE.exec(lines[i]);
-                if (match) {
-                    result.push(new StackFrame(match[3] || undefined, undefined, match[2], match[1], level++));
-                }
-            }
-
-            return result;
-        },
-
-        // Opera 10.65+ Error.stack very similar to FF/Safari
-        parseOpera11: function ErrorStackParser$$parseOpera11(error) {
-            return error.stack.split('\n').filter(function (line) {
-                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP) &&
-                    !line.match(/^Error created at/);
-            }, this).map(function (line) {
-                var tokens = line.split('@');
-                var locationParts = this.extractLocation(tokens.pop());
-                var functionCall = (tokens.shift() || '');
-                var functionName = functionCall
-                        .replace(/<anonymous function(: (\w+))?>/, '$2')
-                        .replace(/\([^\)]*\)/g, '') || undefined;
-                var argsRaw;
-                if (functionCall.match(/\(([^\)]*)\)/)) {
-                    argsRaw = functionCall.replace(/^[^\(]+\(([^\)]*)\)$/, '$1');
-                }
-                var args = (argsRaw === undefined || argsRaw === '[arguments not available]') ? undefined : argsRaw.split(',');
-                return new StackFrame(functionName, args, locationParts[0], locationParts[1], locationParts[2]);
-            }, this);
-        }
-    };
-
-
-
-
-
 	// Application Insights Module
-
-
-	var angularAppInsights = angular.module('ApplicationInsightsModule', ['LocalStorageModule']);
+	var angularAppInsights = angular.module('ApplicationInsightsModule', []);
 
 	// setup some features that can only be done during the configure pass
 	angularAppInsights.config(['$provide',function ($provide) {
@@ -341,14 +693,22 @@
 
 
 		// invoked when the provider is run
-		this.$get = ['localStorageService', '$http', '$locale','$window','$location', function(localStorageService, $http, $locale, $window, $location){	
-				return new ApplicationInsights(localStorageService, $http, $locale, $window, $location);
+		this.$get = ['$http', '$locale','$window','$location','$rootScope','$parse','$document', function($http, $locale, $window, $location,$rootScope,$parse,$document){
+
+				// get a reference of storage
+				var storage = localStorage({
+											window: $window,
+											rootScope: $rootScope,
+											document: $document,
+											parse: $parse
+											});
+
+				return new ApplicationInsights(storage, $http, $locale, $window, $location, errorStackParser);
 		}];
 
 
-
 		// Application Insights implementation
-		function ApplicationInsights(localStorage, $http, $locale, $window, $location){
+		function ApplicationInsights(localStorage, $http, $locale, $window, $location, exceptionStackParser){
 			
 			var _log = _logInterceptor.getPrivateLoggingObject(); // so we can log output without causing a recursive loop.
 			var _exceptionHandler = _exceptionInterceptor.getPrivateExceptionHanlder();
@@ -624,4 +984,10 @@
         });
      }]);
 
-})( window.angular );
+})( root.angular, root.errorStackParser, root.storage );
+
+// Code here will be linted with JSHint.
+/* jshint ignore:start */
+})(window.angular);
+// Code here will be ignored by JSHint.
+/* jshint ignore:end */
