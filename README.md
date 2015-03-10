@@ -56,13 +56,13 @@ Add a reference to the *angular-applicationinsights.js* file in your main html f
 	<!-- load application insights after the angular script, but before your main application module -->
    <script src="build/angular-applicationinsights.js"></script>
    <script language="javascript">
-		var amazingApp = angular.module('amazingApp', ['ApplicationsInsightsModule']);
+		var amazingApp = angular.module('amazingApp', ['ApplicationInsightsModule']);
    </script>
 ```
 Configure the provider during your application module's config phase:
 ```Javascript
 <script language="javascript">
-	var amazingApp = angular.module('amazingApp', ['ApplicationsInsightsModule']);
+	var amazingApp = angular.module('amazingApp', ['ApplicationInsightsModule']);
 
 	amazingApp.config(function(applicationInsightsServiceProvider){
 		var options = {applicationName:'amazingApp'};
