@@ -68,7 +68,7 @@ Configure the provider during your application module's config phase:
 		var options = {applicationName:'amazingApp'};
 		// Configuration options are described below 	 
         applicationInsightsServiceProvider.configure('<PUT YOUR APPLICATION INSIGHTS KEY HERE', options );
-    })
+    });
  </script>
 ```
  Basic automatic telemetry will be gathered out of the box, but for a direct reference inject the _applicationInsightsService_ into your code:
@@ -169,7 +169,7 @@ Sends a trace log message to Application Insights.
 If the *autoLogTracking* option is enabled, trackTraceMessage will be called any time one of the **$log** service methods are called.
 ```Javascript
 // trackTraceMessage will be invoked with a value of 'message' and 'info' as the parameters.
- $log.info('message')
+ $log.info('message');
 ```
 
 
