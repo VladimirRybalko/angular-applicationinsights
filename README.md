@@ -14,7 +14,7 @@ An implementation of Microsoft Application Insights as a 100% AngularJS module. 
 
 - A Microsoft Application Insights Instrumentation Key:
     - This can be obtained from https://portal.azure.com, and registering an Application Insights resource.
-    - From the AppInsights Wiki : [Getting an Application Insights Instrumentation Key](https://github.com/Microsoft/AppInsights-Home/wiki#getting-an-application-insights-instrumentation-key) 
+    - A guide based on the latest portal update : [Obtaining An Application Insights Instrumentation Key](http://kenhaines.net/getting-an-application-insights-instrumentation-key/) 
 
 
 ###Installation
@@ -56,19 +56,19 @@ Add a reference to the *angular-applicationinsights.js* file in your main html f
 	<!-- load application insights after the angular script, but before your main application module -->
    <script src="build/angular-applicationinsights.js"></script>
    <script language="javascript">
-		var amazingApp = angular.module('amazingApp', ['ApplicationsInsightsModule']);
+		var amazingApp = angular.module('amazingApp', ['ApplicationInsightsModule']);
    </script>
 ```
 Configure the provider during your application module's config phase:
 ```Javascript
 <script language="javascript">
-	var amazingApp = angular.module('amazingApp', ['ApplicationsInsightsModule']);
+	var amazingApp = angular.module('amazingApp', ['ApplicationInsightsModule']);
 
 	amazingApp.config(function(applicationInsightsServiceProvider){
 		var options = {applicationName:'amazingApp'};
 		// Configuration options are described below 	 
         applicationInsightsServiceProvider.configure('<PUT YOUR APPLICATION INSIGHTS KEY HERE', options );
-    })
+    });
  </script>
 ```
  Basic automatic telemetry will be gathered out of the box, but for a direct reference inject the _applicationInsightsService_ into your code:
@@ -169,7 +169,7 @@ Sends a trace log message to Application Insights.
 If the *autoLogTracking* option is enabled, trackTraceMessage will be called any time one of the **$log** service methods are called.
 ```Javascript
 // trackTraceMessage will be invoked with a value of 'message' and 'info' as the parameters.
- $log.info('message')
+ $log.info('message');
 ```
 
 
