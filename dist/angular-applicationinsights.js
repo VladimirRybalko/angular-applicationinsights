@@ -539,7 +539,7 @@ function isStringNumber(num) {
 'use strict';
 
 	
-	var _version='angular:0.2.0';
+	var _version='angular:0.2.2';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,
