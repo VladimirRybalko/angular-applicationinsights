@@ -19,7 +19,7 @@
     "applicationinsights",
     "stats"
   ],
-  "version": "0.2.2",
+  "version": "0.2.3",
   "files": [
     "build/angular-applicationinsights.min.js"
   ],
