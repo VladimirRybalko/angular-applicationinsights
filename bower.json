@@ -1,6 +1,6 @@
 {
   "name": "angular-applicationinsights",
-  "version": "0.0.2",
+  "version": "0.2.3",
   "homepage": "https://github.com/khaines/angular-applicationinsights",
   "authors": [
     "Ken Haines <ken@kenhaines.net>"
@@ -26,6 +26,5 @@
     "tests"
   ],
   "dependencies": {
-    "angular-local-storage": "~0.1.5"
   }
 }
