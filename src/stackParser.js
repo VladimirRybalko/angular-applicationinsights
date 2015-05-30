@@ -53,12 +53,12 @@ var root = window.root;
             }
         },
 
-        parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
+          parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
         	var level =0;
             return error.stack.split('\n').slice(1).map(function (line) {
                 var tokens = line.replace(/^\s+/, '').split(/\s+/).slice(1);
-                var locationParts = this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, ''));
-                var functionName = (!tokens[0] || tokens[0] === 'Anonymous') ? undefined : tokens[0];
+                var locationParts = tokens[0] !== undefined ? this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, '')) : ['unknown','unknown','unknown'];
+                var functionName = (!tokens[0] || tokens[0] === 'Anonymous') ? 'unknown' : tokens[0];
                 return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
             }, this);
         },
