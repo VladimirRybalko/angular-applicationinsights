@@ -15,7 +15,7 @@ var root = window.root;
 'use strict';
 
 	
-	var _version='angular:0.2.3';
+	var _version='angular:0.2.4';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,

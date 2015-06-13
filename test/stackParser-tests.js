@@ -21,7 +21,7 @@ describe('ErrorStackParser', function () {
             var stackFrames = unit.parse(CapturedExceptions.SAFARI_6);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
-            expect(stackFrames[0]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 48]);
+            expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 48]);
             expect(stackFrames[1]).toMatchStackFrame(['dumpException3', undefined, 'http://path/to/file.js', 52]);
             expect(stackFrames[2]).toMatchStackFrame(['onclick', undefined, 'http://path/to/file.js', 82]);
         });
@@ -30,7 +30,7 @@ describe('ErrorStackParser', function () {
             var stackFrames = unit.parse(CapturedExceptions.SAFARI_7);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
-            expect(stackFrames[0]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 48, 22]);
+            expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 48, 22]);
             expect(stackFrames[1]).toMatchStackFrame(['foo', undefined, 'http://path/to/file.js', 52, 15]);
             expect(stackFrames[2]).toMatchStackFrame(['bar', undefined, 'http://path/to/file.js', 108, 107]);
         });
@@ -39,7 +39,7 @@ describe('ErrorStackParser', function () {
             var stackFrames = unit.parse(CapturedExceptions.SAFARI_8);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
-            expect(stackFrames[0]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 47, 22]);
+            expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 47, 22]);
             expect(stackFrames[1]).toMatchStackFrame(['foo', undefined, 'http://path/to/file.js', 52, 15]);
             expect(stackFrames[2]).toMatchStackFrame(['bar', undefined, 'http://path/to/file.js', 108, 23]);
         });

@@ -70,7 +70,7 @@ var root = window.root;
             }, this).map(function (line) {
                 var tokens = line.split('@');
                 var locationParts = this.extractLocation(tokens.pop());
-                var functionName = tokens.shift() || undefined;
+                var functionName = tokens.shift() || 'unknown';
                 return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
             }, this);
         },
