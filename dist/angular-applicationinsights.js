@@ -157,12 +157,12 @@
             }
         },
 
-        parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
+          parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
         	var level =0;
             return error.stack.split('\n').slice(1).map(function (line) {
                 var tokens = line.replace(/^\s+/, '').split(/\s+/).slice(1);
-                var locationParts = this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, ''));
-                var functionName = (!tokens[0] || tokens[0] === 'Anonymous') ? undefined : tokens[0];
+                var locationParts = tokens[0] !== undefined ? this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, '')) : ['unknown','unknown','unknown'];
+                var functionName = (!tokens[0] || tokens[0] === 'Anonymous') ? 'unknown' : tokens[0];
                 return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
             }, this);
         },
@@ -174,7 +174,7 @@
             }, this).map(function (line) {
                 var tokens = line.split('@');
                 var locationParts = this.extractLocation(tokens.pop());
-                var functionName = tokens.shift() || undefined;
+                var functionName = tokens.shift() || 'unknown';
                 return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
             }, this);
         },
@@ -246,6 +246,7 @@
     root.errorStackParser = exceptionStackParser;
 
 })(root);
+
 /*
 * Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
 */
@@ -539,7 +540,7 @@ function isStringNumber(num) {
 'use strict';
 
 	
-	var _version='angular:0.2.3';
+	var _version='angular:0.2.4';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,
