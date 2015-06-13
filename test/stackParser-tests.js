@@ -59,7 +59,7 @@ describe('ErrorStackParser', function () {
             expect(stackFrames[0]).toMatchStackFrame(['bar', undefined, 'http://path/to/file.js', 13, 17]);
             expect(stackFrames[1]).toMatchStackFrame(['bar', undefined, 'http://path/to/file.js', 16, 5]);
             expect(stackFrames[2]).toMatchStackFrame(['foo', undefined, 'http://path/to/file.js', 20, 5]);
-            expect(stackFrames[3]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 24, 4]);
+            expect(stackFrames[3]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 24, 4]);
         });
 
         it('should parse V8 entries with no location', function () {
@@ -79,7 +79,7 @@ describe('ErrorStackParser', function () {
             var stackFrames = unit.parse(CapturedExceptions.IE_10);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
-            expect(stackFrames[0]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 48, 13]);
+            expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 48, 13]);
             expect(stackFrames[1]).toMatchStackFrame(['foo', undefined, 'http://path/to/file.js', 46, 9]);
             expect(stackFrames[2]).toMatchStackFrame(['bar', undefined, 'http://path/to/file.js', 82, 1]);
         });
@@ -88,7 +88,7 @@ describe('ErrorStackParser', function () {
             var stackFrames = unit.parse(CapturedExceptions.IE_11);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
-            expect(stackFrames[0]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 47, 21]);
+            expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 47, 21]);
             expect(stackFrames[1]).toMatchStackFrame(['foo', undefined, 'http://path/to/file.js', 45, 13]);
             expect(stackFrames[2]).toMatchStackFrame(['bar', undefined, 'http://path/to/file.js', 108, 1]);
         });
@@ -129,7 +129,7 @@ describe('ErrorStackParser', function () {
             var stackFrames = unit.parse(CapturedExceptions.OPERA_25);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
-            expect(stackFrames[0]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 47, 22]);
+            expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 47, 22]);
             expect(stackFrames[1]).toMatchStackFrame(['foo', undefined, 'http://path/to/file.js', 52, 15]);
             expect(stackFrames[2]).toMatchStackFrame(['bar', undefined, 'http://path/to/file.js', 108, 168]);
         });
