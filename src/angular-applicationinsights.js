@@ -209,6 +209,7 @@ var root = window.root;
   				metrics: _namespace +'MetricData',
   				exception: _namespace +'ExceptionData'
   			};
+			var _commonProperties;
 
 			var getUUID = function(){
 				var uuidKey = '$$appInsights__uuid';
@@ -421,6 +422,11 @@ var root = window.root;
 			};
 
 			var generateAppInsightsData = function(payloadName, payloadDataType, payloadData){
+				
+				if (_commonProperties) {
+					payloadData.properties = payloadData.properties || {}; 
+					angular.extend(payloadData.properties, _commonProperties); 
+				} 
 
 				return {
 					name: payloadName,
@@ -448,6 +454,12 @@ var root = window.root;
 					}
 				};
 			};
+			
+			var setCommonProperties = function (data) {
+				validateProperties(data);
+				_commonProperties = _commonProperties || {};
+				angular.extend(_commonProperties, data);
+			};
 
 			// set traceTraceMessage as the intercept method of the log decorator
 			if(_options.autoLogTracking){
@@ -465,7 +477,8 @@ var root = window.root;
 				'trackMetric': trackMetric,
 				'trackException' : trackException,
 				'applicationName': _options.applicationName,
-				'autoPageViewTracking': _options.autoPageViewTracking
+				'autoPageViewTracking': _options.autoPageViewTracking,
+				'setCommonProperties': setCommonProperties
 			};
 
 		}
