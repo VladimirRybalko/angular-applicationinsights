@@ -123,6 +123,26 @@ describe('Application Insights for Angular JS Provider', function(){
 			_insights.trackEvent('Some Test Event');
 			$httpBackend.flush();
 		});
+		
+		
+		it('Common properties should be sent with custom events', function(){
+			$httpBackend.expectPOST('https://dc.services.visualstudio.com/v2/track',function(json){
+				var data = JSON.parse(json);
+				//expect(data.length).toEqual(1);
+				expect(data.name).toEqual('Microsoft.ApplicationInsights.Event');
+				expect(data.data.item.properties.testName).toEqual('commonPropTest');
+
+
+				return true;
+			}, function(headers){				
+				return headers['Content-Type'] == 'application/json';
+			})
+			.respond(200,'');
+			
+			_insights.setCommonProperties({testName:"commonPropTest"});
+			_insights.trackEvent('some other test');
+			$httpBackend.flush();
+		});
 	});
 
 	describe('Custom Metric Tracking', function(){
@@ -146,6 +166,8 @@ describe('Application Insights for Angular JS Provider', function(){
  
 		});
 	});
+	
+	
 
 	describe('Exception/Crash Tracking', function(){
 

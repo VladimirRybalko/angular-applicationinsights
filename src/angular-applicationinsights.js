@@ -425,7 +425,7 @@ var root = window.root;
 				
 				if (_commonProperties) {
 					payloadData.properties = payloadData.properties || {}; 
-					angular.extend(payloadData.properties, _commonProperties); 
+					extend(payloadData.properties, _commonProperties); 
 				} 
 
 				return {
@@ -458,7 +458,7 @@ var root = window.root;
 			var setCommonProperties = function (data) {
 				validateProperties(data);
 				_commonProperties = _commonProperties || {};
-				angular.extend(_commonProperties, data);
+				extend(_commonProperties, data);
 			};
 
 			// set traceTraceMessage as the intercept method of the log decorator
