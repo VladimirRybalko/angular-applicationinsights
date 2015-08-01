@@ -322,7 +322,9 @@ var root = window.root;
 					headers: {
 						'Content-Type': _contentType
 					},
-					data:data
+					data:data,
+					// bugfix for issue# 18: disable credentials on CORS requests.
+					withCredentials: false 
 				};
 
 				try{

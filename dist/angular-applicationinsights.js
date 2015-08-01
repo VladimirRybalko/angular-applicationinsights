@@ -734,6 +734,7 @@ function isStringNumber(num) {
   				metrics: _namespace +'MetricData',
   				exception: _namespace +'ExceptionData'
   			};
+			var _commonProperties;
 
 			var getUUID = function(){
 				var uuidKey = '$$appInsights__uuid';
@@ -846,7 +847,9 @@ function isStringNumber(num) {
 					headers: {
 						'Content-Type': _contentType
 					},
-					data:data
+					data:data,
+					// bugfix for issue# 18: disable credentials on CORS requests.
+					withCredentials: false 
 				};
 
 				try{
@@ -946,6 +949,11 @@ function isStringNumber(num) {
 			};
 
 			var generateAppInsightsData = function(payloadName, payloadDataType, payloadData){
+				
+				if (_commonProperties) {
+					payloadData.properties = payloadData.properties || {}; 
+					extend(payloadData.properties, _commonProperties); 
+				} 
 
 				return {
 					name: payloadName,
@@ -973,6 +981,12 @@ function isStringNumber(num) {
 					}
 				};
 			};
+			
+			var setCommonProperties = function (data) {
+				validateProperties(data);
+				_commonProperties = _commonProperties || {};
+				extend(_commonProperties, data);
+			};
 
 			// set traceTraceMessage as the intercept method of the log decorator
 			if(_options.autoLogTracking){
@@ -990,7 +1004,8 @@ function isStringNumber(num) {
 				'trackMetric': trackMetric,
 				'trackException' : trackException,
 				'applicationName': _options.applicationName,
-				'autoPageViewTracking': _options.autoPageViewTracking
+				'autoPageViewTracking': _options.autoPageViewTracking,
+				'setCommonProperties': setCommonProperties
 			};
 
 		}
