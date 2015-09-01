@@ -315,6 +315,30 @@ var root = window.root;
 				return validateProperties;
 			};
 
+			var validateSeverityLevel = function (level) {
+                // https://github.com/Microsoft/ApplicationInsights-JS/blob/7bbf8b7a3b4e3610cefb31e9d61765a2897dcb3b/JavaScript/JavaScriptSDK/Contracts/Generated/SeverityLevel.ts
+                /*
+                 export enum SeverityLevel
+                 {
+                    Verbose = 0,
+                    Information = 1,
+                    Warning = 2,
+                    Error = 3,
+                    Critical = 4,
+                 }
+
+                 We need to map the angular $log levels to these for app insights
+                 */
+                var levels = [
+                    'debug', // Verbose
+                    'info',  // Information
+                    'warn',  // Warning
+                    'error'  //Error
+                ]
+                var levelEnum = levels.indexOf(level);
+                return levelEnum > -1 ? levelEnum : 0;
+            };
+
 			var sendData = function(data){
 				var request = {
 					method: 'POST',
@@ -382,7 +406,7 @@ var root = window.root;
 											{
 												ver: 1,
 												message: message,
-												severity: level,
+												severityLevel: validateSeverityLevel(level),
 												properties: validateProperties(properties)
 											});
 				sendData(data);
