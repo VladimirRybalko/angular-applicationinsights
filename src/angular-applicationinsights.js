@@ -334,7 +334,7 @@ var root = window.root;
                     'info',  // Information
                     'warn',  // Warning
                     'error'  //Error
-                ]
+                ];
                 var levelEnum = levels.indexOf(level);
                 return levelEnum > -1 ? levelEnum : 0;
             };
