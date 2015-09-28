@@ -23,6 +23,7 @@
   "files": [
     "build/angular-applicationinsights.min.js"
   ],
+  "main": "build/angular-applicationinsights.min.js",
   "scripts": {
     "test": "grunt"
   },
