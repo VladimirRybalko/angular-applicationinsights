@@ -15,7 +15,7 @@ var root = window.root;
 'use strict';
 
 	
-	var _version='angular:0.2.4';
+	var _version='angular:0.2.6';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,
@@ -340,12 +340,24 @@ var root = window.root;
             };
 
 			var sendData = function(data){
+
+				// bug # 24 : create a header object that filters out any default assigned header that will not be accepted by a browser's CORS check
+				var headers = {};
+				for(var header in $http.defaults.headers.common){
+					headers[header] = undefined;
+				}
+
+				for(var postHeader in $http.defaults.headers.post){
+					headers[postHeader] = undefined;
+				}
+
+				headers.Accept = _contentType;
+				headers['Content-Type'] = _contentType;
+
 				var request = {
 					method: 'POST',
 					url:_analyticsServiceUrl,
-					headers: {
-						'Content-Type': _contentType
-					},
+					headers: headers,
 					data:data,
 					// bugfix for issue# 18: disable credentials on CORS requests.
 					withCredentials: false 

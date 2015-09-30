@@ -31,3 +31,8 @@ analyticsDemo.config(function(applicationInsightsServiceProvider){
                 controller  : 'page2Controller'
             });
     }); 
+
+
+analyticsDemo.run(function($http) {
+  $http.defaults.headers.common.Authorization = 'Basic YmVlcDpib29w'
+});
