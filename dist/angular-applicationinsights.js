@@ -540,7 +540,7 @@ function isStringNumber(num) {
 'use strict';
 
 	
-	var _version='angular:0.2.4';
+	var _version='angular:0.2.6';
 	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
 
 	var isDefined = angular.isDefined,
@@ -840,13 +840,49 @@ function isStringNumber(num) {
 				return validateProperties;
 			};
 
+			var validateSeverityLevel = function (level) {
+                // https://github.com/Microsoft/ApplicationInsights-JS/blob/7bbf8b7a3b4e3610cefb31e9d61765a2897dcb3b/JavaScript/JavaScriptSDK/Contracts/Generated/SeverityLevel.ts
+                /*
+                 export enum SeverityLevel
+                 {
+                    Verbose = 0,
+                    Information = 1,
+                    Warning = 2,
+                    Error = 3,
+                    Critical = 4,
+                 }
+
+                 We need to map the angular $log levels to these for app insights
+                 */
+                var levels = [
+                    'debug', // Verbose
+                    'info',  // Information
+                    'warn',  // Warning
+                    'error'  //Error
+                ];
+                var levelEnum = levels.indexOf(level);
+                return levelEnum > -1 ? levelEnum : 0;
+            };
+
 			var sendData = function(data){
+
+				// bug # 24 : create a header object that filters out any default assigned header that will not be accepted by a browser's CORS check
+				var headers = {};
+				for(var header in $http.defaults.headers.common){
+					headers[header] = undefined;
+				}
+
+				for(var postHeader in $http.defaults.headers.post){
+					headers[postHeader] = undefined;
+				}
+
+				headers.Accept = _contentType;
+				headers['Content-Type'] = _contentType;
+
 				var request = {
 					method: 'POST',
 					url:_analyticsServiceUrl,
-					headers: {
-						'Content-Type': _contentType
-					},
+					headers: headers,
 					data:data,
 					// bugfix for issue# 18: disable credentials on CORS requests.
 					withCredentials: false 
@@ -907,7 +943,7 @@ function isStringNumber(num) {
 											{
 												ver: 1,
 												message: message,
-												severity: level,
+												severityLevel: validateSeverityLevel(level),
 												properties: validateProperties(properties)
 											});
 				sendData(data);
