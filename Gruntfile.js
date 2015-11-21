@@ -6,9 +6,9 @@ module.exports = function(grunt) {
             default: {
                 src: ["**/*.ts", "!node_modules/**/*.ts"],
                 options: {
-                    module: "CommonJS",
                     comment: true
-                }
+                },
+                out: "build/temp-angular-applicationinstights.js"
             }
         },
     pkg: grunt.file.readJSON('package.json'),
