@@ -2,6 +2,15 @@ module.exports = function(grunt) {
 
   // Project configuration.
   grunt.initConfig({
+     ts: {
+            default: {
+                src: ["**/*.ts", "!node_modules/**/*.ts"],
+                options: {
+                    module: "CommonJS",
+                    comment: true
+                }
+            }
+        },
     pkg: grunt.file.readJSON('package.json'),
     uglify: {
       options: {
@@ -52,6 +61,7 @@ module.exports = function(grunt) {
 
   });
 
+  grunt.loadNpmTasks("grunt-ts");
   grunt.loadNpmTasks('grunt-strip-code');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-jshint');
@@ -60,7 +70,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma-coveralls');
 
   
-  grunt.registerTask('default', ['jshint','karma','concat','strip_code','uglify']);
-  grunt.registerTask('travis',['jshint','karma','concat','strip_code','uglify','coveralls']);
+  grunt.registerTask('default', ['ts','jshint','karma','concat','strip_code','uglify']);
+  grunt.registerTask('travis',['ts','jshint','karma','concat','strip_code','uglify','coveralls']);
 
 };

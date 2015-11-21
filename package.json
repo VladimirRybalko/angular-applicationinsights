@@ -43,6 +43,7 @@
     "grunt-karma": "^0.10.1",
     "grunt-karma-coveralls": "^2.5.3",
     "grunt-strip-code": "^0.1.2",
+    "grunt-ts": "^5.1.1",
     "jasmine-core": "^2.2.0",
     "jasmine-node": "^1.14.5",
     "karma": "~0.12.8",
