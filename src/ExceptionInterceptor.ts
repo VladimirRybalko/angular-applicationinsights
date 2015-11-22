@@ -9,7 +9,7 @@ module AngularAppInsights {
         private _interceptFunction;
         private _tools: Tools;
 
-        errorOnHttpCall: boolean;
+       static errorOnHttpCall: boolean;
 
         setInterceptFunction(func) {
             this._interceptFunction = func;
@@ -22,7 +22,7 @@ module AngularAppInsights {
         constructor($provide: any, tools: Tools) {
 
             this._tools = tools;
-            this.errorOnHttpCall = false;
+            ExceptionInterceptor.errorOnHttpCall = false;
 
             this._interceptFunction = this._tools.noop;
 
@@ -32,7 +32,7 @@ module AngularAppInsights {
                     return (exception, cause) => {
                         // track the call 
                         // ... only if there is no active issues/errors sending data over http, in order to prevent an infinite loop.
-                        if (!this.errorOnHttpCall) {
+                        if (!ExceptionInterceptor.errorOnHttpCall) {
                             this._interceptFunction(exception, cause);
                         }
                         // Call the original 

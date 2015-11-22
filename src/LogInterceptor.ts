@@ -4,7 +4,7 @@ module AngularAppInsights {
     // $log interceptor .. will send log data to application insights, once app insights is 
     // registered. $provide is only available in the config phase, so we need to setup
     // the decorator before app insights is instantiated.
-    class LogInterceptor {
+    export class LogInterceptor {
 
         private _debugFn: any;
         private _infoFn: any;
