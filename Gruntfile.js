@@ -5,16 +5,21 @@ module.exports = function(grunt) {
      ts: {
             default: {
                 src: ["**/*.ts", "!node_modules/**/*.ts"],
+                
                 options: {
                     comment: true
                 },
-                out: "build/temp-angular-applicationinstights.js"
+                out: "build/angular-applicationinsights.js"
             }
         },
     pkg: grunt.file.readJSON('package.json'),
     uglify: {
       options: {
-        banner: '/*! <%= pkg.name %> version <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n'
+        banner: '/*! <%= pkg.name %> version <%= pkg.version %> <%= grunt.template.today("yyyy-mm-dd") %> */\n',
+        mangleProperties:true,
+        compress:{
+          unsafe:true
+        }
       },
       build: {
         src: 'build/<%= pkg.name %>.js',
@@ -43,7 +48,7 @@ module.exports = function(grunt) {
         separator: '\n',
       },
       dist: {
-        src: ['src/header.js','src/stackFrame.js', 'src/stackParser.js', 'src/storage.js', 'src/angular-applicationinsights.js', 'src/footer.js' ],
+        src: ['src/header.js','build/angular-applicationinsights.js', 'src/footer.js' ],
         dest: 'build/angular-applicationinsights.js',
       },
     },
@@ -70,7 +75,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma-coveralls');
 
   
-  grunt.registerTask('default', ['ts','jshint','karma','concat','strip_code','uglify']);
+  grunt.registerTask('default', ['ts','karma','concat','strip_code','uglify']);
   grunt.registerTask('travis',['ts','jshint','karma','concat','strip_code','uglify','coveralls']);
 
 };

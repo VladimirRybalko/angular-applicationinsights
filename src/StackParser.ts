@@ -1,7 +1,7 @@
 /// <reference path="./Tools.ts" />
 /// <reference path="./StackFrame.ts" />
-module AngularAppInsights {
-   export class StackParser {
+
+    class StackParser {
         /*
         * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
         */
@@ -139,6 +139,6 @@ module AngularAppInsights {
         }
 
     }
-}
+
 
 

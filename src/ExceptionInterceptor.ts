@@ -1,9 +1,9 @@
 /// <reference path="./Tools.ts" />
 
-module AngularAppInsights {
+
     // Exception interceptor
     // Intercepts calls to the $exceptionHandler and sends them to Application insights as exception telemetry.
-   export class ExceptionInterceptor {
+    class ExceptionInterceptor {
 
         private _origExceptionHandler;
         private _interceptFunction;
@@ -43,4 +43,3 @@ module AngularAppInsights {
         }
 
     }
-}

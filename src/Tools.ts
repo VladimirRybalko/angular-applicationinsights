@@ -1,7 +1,7 @@
 /// <reference path="typings/angularjs/angular.d.ts" />
 
-module AngularAppInsights {
-   export class Tools {
+
+    class Tools {
 
         private _angular: angular.IAngularStatic;
         isDefined: (val: any) => boolean;
@@ -52,4 +52,3 @@ module AngularAppInsights {
 
 
     }
-}

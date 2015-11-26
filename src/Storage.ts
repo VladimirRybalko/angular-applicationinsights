@@ -3,8 +3,8 @@
 * Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
 */
 
-module AngularAppInsights {
-    export class Storage {
+
+     class AppInsightsStorage {
         private _tools: Tools;
         private static defaultConfig = {
             // You should set a prefix to avoid overwriting any local storage variables from the rest of your app
@@ -50,7 +50,7 @@ module AngularAppInsights {
         constructor(settings: any, tools: Tools) {
             this._tools = tools;
 
-            this._config = this._tools.extend(Storage.defaultConfig, settings);
+            this._config = this._tools.extend(AppInsightsStorage.defaultConfig, settings);
             this._self = this._config;
             this._prefix = this._config.prefix;
             this._cookie = this._config.cookie;
@@ -116,7 +116,7 @@ module AngularAppInsights {
                 ("cookie" in this._$document && (this._$document.cookie.length > 0 ||
                 (this._$document.cookie = "test").indexOf.call(this._$document.cookie, "test") > -1));
             } catch (e) {
-                this._$rootScope.$broadcast('LocalStorageModule.notification.error', e.message);
+                this._$rootScope.$broadcast('AngularAppInsights.Storage.notification.error', e.message);
                 return false;
             }
         }
@@ -294,4 +294,4 @@ module AngularAppInsights {
             }
         }
     }
-}
+

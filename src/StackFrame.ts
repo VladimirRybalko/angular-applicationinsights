@@ -3,8 +3,8 @@
 /*
 * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
 */
-module AngularAppInsights {
-    export class StackFrame {
+
+     class StackFrame {
 
         private _tools: Tools;
 
@@ -115,5 +115,3 @@ module AngularAppInsights {
         }
 
     }
-
-}

@@ -6,10 +6,10 @@
 /// <reference path="./LogInterceptor.ts" />
 /// <reference path="./ExceptionInterceptor.ts" />
 /// <reference path="./Options.ts" />
-module AngularAppInsights {
-    export class ApplicationInsights {
 
-        private _localStorage: Storage;
+     class ApplicationInsights {
+
+        private _localStorage: AppInsightsStorage;
         private _http: angular.IHttpService;
         private _locale: angular.ILocaleService;
         private _window: angular.IWindowService;
@@ -47,7 +47,7 @@ module AngularAppInsights {
         private _contentType = 'application/json';
 
 
-        constructor(localStorage: Storage,
+        constructor(localStorage: AppInsightsStorage,
             $http: angular.IHttpService,
             $locale: angular.ILocaleService,
             $window: angular.IWindowService,
@@ -365,5 +365,5 @@ module AngularAppInsights {
         }
     }
 
-}
+
 

@@ -1,5 +1,5 @@
-﻿module AngularAppInsights {
-    export class Options {
+﻿
+     class Options {
         
             applicationName= '';
             autoPageViewTracking= true;
@@ -9,4 +9,3 @@
             instrumentationKey='';
         
     }
-}

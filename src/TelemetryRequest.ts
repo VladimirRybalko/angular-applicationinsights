@@ -1,7 +1,7 @@
 ﻿/// <reference path="typings/angularjs/angular.d.ts" />
 /// <reference path="./Tools.ts" />
-module AngularAppInsights {
-    export class TelemetryRequest implements angular.IRequestConfig {
+
+     class TelemetryRequest implements angular.IRequestConfig {
         method:string;
         url:string;
         headers: TelemetryRequestHeaders;
@@ -12,7 +12,7 @@ module AngularAppInsights {
     }
 
 
-    export class TelemetryRequestHeaders implements angular.IHttpRequestConfigHeaders {
+     class TelemetryRequestHeaders implements angular.IHttpRequestConfigHeaders {
         [requestType: string]: string | (() => string);
         common: string | (() => string);
         get: string | (() => string);
@@ -21,4 +21,3 @@ module AngularAppInsights {
         patch: string | (() => string);
     }
 
-}
