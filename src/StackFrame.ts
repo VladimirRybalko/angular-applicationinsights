@@ -107,13 +107,13 @@ class StackFrame {
         this.level = Number(v);
     }
 
-    //toString() {
-    //    var functionName = this.getFunctionName() || '{anonymous}';
-    //    var args = '(' + (this.getArgs() || []).join(',') + ')';
-    //    var fileName = this.getFileName() ? ('@' + this.getFileName()) : '';
-    //    var lineNumber = Tools.isNumber(this.getLineNumber()) ? (':' + this.getLineNumber()) : '';
-    //    var columnNumber = Tools.isNumber(this.getColumnNumber()) ? (':' + this.getColumnNumber()) : '';
-    //    return functionName + args + fileName + lineNumber + columnNumber;
-    //}
+    toString() {
+        var functionName = this.method || '{anonymous}';
+        var args = '(' + (this.args || []).join(',') + ')';
+        var fileName = this.fileName ? ('@' + this.fileName) : '';
+        var lineNumber = Tools.isNumber(this.lineNumber) ? (':' + this.lineNumber) : '';
+        var columnNumber = Tools.isNumber(this.columnNumber) ? (':' + this.columnNumber) : '';
+        return functionName + args + fileName + lineNumber + columnNumber;
+    }
 
 }
