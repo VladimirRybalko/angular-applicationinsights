@@ -11,19 +11,16 @@
         private _warnFn: any;
         private _errorFn: any;
         private _logFn: any;
-        private _interceptFuntion: any;
+        static interceptFuntion: any;
         private _angular: any;
         private _noop: any;
-        private _tools: Tools;
-
-        constructor($provide: any, angular: any, tools: Tools) {
+        
+        constructor($provide: any, angular: any) {
             this._angular = angular;
             this._noop = this._angular.noop;
 
             // function to invoke ... initialized to noop
-            this._interceptFuntion = this._noop;
-
-            this._tools = tools;
+            LogInterceptor.interceptFuntion = this._noop;
 
 
             $provide.decorator('$log', [
@@ -47,16 +44,16 @@
 
 
         setInterceptFunction(func: (message: any, level: string) => void) {
-            this._interceptFuntion = func;
+            LogInterceptor.interceptFuntion = func;
         }
 
         getPrivateLoggingObject() {
             return {
-                debug: this._tools.isNullOrUndefined(this._debugFn) ? this._tools.noop : this._debugFn,
-                info: this._tools.isNullOrUndefined(this._infoFn) ? this._tools.noop : this._infoFn,
-                warn: this._tools.isNullOrUndefined(this._warnFn) ? this._tools.noop : this._warnFn,
-                error: this._tools.isNullOrUndefined(this._errorFn) ? this._tools.noop : this._errorFn,
-                log: this._tools.isNullOrUndefined(this._logFn) ? this._tools.noop : this._logFn
+                debug: Tools.isNullOrUndefined(this._debugFn) ? Tools.noop : this._debugFn,
+                info: Tools.isNullOrUndefined(this._infoFn) ? Tools.noop : this._infoFn,
+                warn: Tools.isNullOrUndefined(this._warnFn) ? Tools.noop : this._warnFn,
+                error: Tools.isNullOrUndefined(this._errorFn) ? Tools.noop : this._errorFn,
+                log: Tools.isNullOrUndefined(this._logFn) ? Tools.noop : this._logFn
             };
         }
 
@@ -64,7 +61,7 @@
             return function() {
                 var args = [].slice.call(arguments);
                 // track the call
-                this._interceptFunction(args[0], level);
+                LogInterceptor.interceptFuntion(args[0], level);
                 // Call the original 
                 orignalFn.apply(null, args);
             };

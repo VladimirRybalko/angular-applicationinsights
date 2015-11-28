@@ -7,8 +7,7 @@
 
         private _origExceptionHandler;
         private _interceptFunction;
-        private _tools: Tools;
-
+        
        static errorOnHttpCall: boolean;
 
         setInterceptFunction(func) {
@@ -16,15 +15,14 @@
         }
 
         getPrivateExceptionHanlder() {
-            return this._tools.isNullOrUndefined(this._origExceptionHandler) ? this._tools.noop : this._origExceptionHandler;
+            return Tools.isNullOrUndefined(this._origExceptionHandler) ? Tools.noop : this._origExceptionHandler;
         }
 
-        constructor($provide: any, tools: Tools) {
+        constructor($provide: any) {
 
-            this._tools = tools;
             ExceptionInterceptor.errorOnHttpCall = false;
 
-            this._interceptFunction = this._tools.noop;
+            this._interceptFunction = Tools.noop;
 
             $provide.decorator('$exceptionHandler', [
                 '$delegate', ($delegate) => {

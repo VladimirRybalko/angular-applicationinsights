@@ -14,53 +14,63 @@
 	var angularAppInsights = angular.module('ApplicationInsightsModule', []);
 	var _logInterceptor:LogInterceptor;
 	var _exceptionInterceptor:ExceptionInterceptor;
-	var _tools = new Tools(angular);
-	var _stackParser = new StackParser(_tools);
+	var tools =new Tools(angular);
+	var _stackParser = new StackParser();
 	
 	// setup some features that can only be done during the configure pass
-	angularAppInsights.config(['$provide',function ($provide) {
-    	 _logInterceptor = new LogInterceptor($provide, angular, _tools);
-    	 _exceptionInterceptor = new ExceptionInterceptor($provide,_tools);
+	angularAppInsights.config(['$provide',$provide => {
+	    _logInterceptor = new LogInterceptor($provide, angular);
+	    _exceptionInterceptor = new ExceptionInterceptor($provide);
 	}]);
 
-	angularAppInsights.provider('applicationInsightsService', function() {
-		// configuration properties for the provider
-		var _instrumentationKey= '';
-		var _options = new Options();
-		
+    angularAppInsights.provider('applicationInsightsService', () => new AppInsightsProvider());
 
-		this.configure = function(instrumentationKey, applicationName, enableAutoPageViewTracking){
-			if(_tools.isString(applicationName)){
-				_instrumentationKey = instrumentationKey;
-				_options.applicationName = applicationName;
-				_options.autoPageViewTracking = _tools.isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
-			}
-			else
-			{
-				_tools.extend(_options, applicationName);
-				_instrumentationKey = instrumentationKey;
-			}
-		};
-		
-		
+    // the run block sets up automatic page view tracking
+    angularAppInsights.run(['$rootScope', '$location', 'applicationInsightsService', ($rootScope, $location, applicationInsightsService: ApplicationInsights) => {
+        $rootScope.$on('$locationChangeSuccess', () => {
 
-		// invoked when the provider is run
-		this.$get = ['$http', '$locale','$window','$location','$rootScope','$parse','$document', function($http, $locale, $window, $location,$rootScope,$parse,$document){
-
-				// get a reference of storage
-				var storage = new AppInsightsStorage({
-											window: $window,
-											rootScope: $rootScope,
-											document: $document,
-											parse: $parse
-											}, _tools);
-
-				return new ApplicationInsights(storage, $http, $locale, $window, $location, _stackParser,_tools, _logInterceptor,_exceptionInterceptor, _options);
-		}];
+            if (applicationInsightsService.options.autoPageViewTracking) {
+                applicationInsightsService.trackPageView(applicationInsightsService.options.applicationName + $location.path());
+            }
+        });
+    }]);
 
 
+
+    class AppInsightsProvider implements angular.IServiceProvider
+        {
+        // configuration properties for the provider
+        private _options = new Options();
+
+        configure(instrumentationKey, applicationName, enableAutoPageViewTracking) {
+            if (Tools.isString(applicationName)) {
+                this._options.instrumentationKey = instrumentationKey;
+                this._options.applicationName = applicationName;
+                this._options.autoPageViewTracking = Tools.isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
+            }
+            else {
+                Tools.extend(this._options, applicationName);
+                this._options.instrumentationKey = instrumentationKey;
+            }
+        } // invoked when the provider is run
+        $get = ['$http', '$locale', '$window', '$location', '$rootScope', '$parse', '$document', ($http, $locale, $window, $location, $rootScope, $parse, $document) => {
+
+            // get a reference of storage
+            var storage = new AppInsightsStorage({
+                window: $window,
+                rootScope: $rootScope,
+                document: $document,
+                parse: $parse
+            });
+
+            return new ApplicationInsights(storage, $http, $locale, $window, $location, _stackParser, _logInterceptor, _exceptionInterceptor, this._options);
+        }];
+
+
+
+    }
+	    
 	
-});
 
 
 

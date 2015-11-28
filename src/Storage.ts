@@ -5,7 +5,7 @@
 
 
      class AppInsightsStorage {
-        private _tools: Tools;
+        
         private static defaultConfig = {
             // You should set a prefix to avoid overwriting any local storage variables from the rest of your app
             // e.g. localStorageServiceProvider.setPrefix('youAppName');
@@ -47,10 +47,9 @@
         private _deriveQualifiedKey;
 
 
-        constructor(settings: any, tools: Tools) {
-            this._tools = tools;
+        constructor(settings: any) {
 
-            this._config = this._tools.extend(AppInsightsStorage.defaultConfig, settings);
+            this._config = Tools.extend(AppInsightsStorage.defaultConfig, settings);
             this._self = this._config;
             this._prefix = this._config.prefix;
             this._cookie = this._config.cookie;
@@ -126,10 +125,10 @@
         // Example use: localStorageService.cookie.add('library','angular');
          addToCookies(key, value) {
 
-            if (this._tools.isUndefined(value)) {
+            if (Tools.isUndefined(value)) {
                 return false;
-            } else if (this._tools.isArray(value) || this._tools.isObject(value)) {
-                value = this._tools.toJson(value);
+            } else if (Tools.isArray(value) || Tools.isObject(value)) {
+                value = Tools.toJson(value);
             }
 
             if (!this.browserSupportsCookies) {
@@ -183,7 +182,7 @@
                     var storedValues = decodeURIComponent(thisCookie.substring(this._prefix.length + key.length + 1, thisCookie.length));
                     try {
                         var obj = JSON.parse(storedValues);
-                        return this._tools.fromJson(obj);
+                        return Tools.fromJson(obj);
                     } catch (e) {
                         return storedValues;
                     }
@@ -199,10 +198,10 @@
         private addToLocalStorage(key, value) {
 
             // Let's convert undefined values to null to get the value consistent
-            if (this._tools.isUndefined(value)) {
+            if (Tools.isUndefined(value)) {
                 value = null;
-            } else if (this._tools.isObject(value) || this._tools.isArray(value) || this._tools.isNumber(+value || value)) {
-                value = this._tools.toJson(value);
+            } else if (Tools.isObject(value) || Tools.isArray(value) || Tools.isNumber(+value || value)) {
+                value = Tools.toJson(value);
             }
 
             // If this browser does not support local storage use cookies
@@ -219,8 +218,8 @@
             }
 
             try {
-                if (this._tools.isObject(value) || this._tools.isArray(value)) {
-                    value = this._tools.toJson(value);
+                if (Tools.isObject(value) || Tools.isArray(value)) {
+                    value = Tools.toJson(value);
                 }
                 if (this._webStorage) {
                     this._webStorage.setItem(this._deriveQualifiedKey(key), value);
@@ -256,7 +255,7 @@
             }
 
             if (item.charAt(0) === "{" || item.charAt(0) === "[" || this.isStringNumber(item)) {
-                return this._tools.fromJson(item);
+                return Tools.fromJson(item);
             }
 
             return item;

@@ -4,41 +4,41 @@
     class Tools {
 
         private _angular: angular.IAngularStatic;
-        isDefined: (val: any) => boolean;
-        isUndefined: (val: any) => boolean;
-        isObject: (val: any) => boolean;
-        isArray: (val: any) => boolean;
-        isString: (val: any) => boolean;
-        extend: (destination: any, ...sources: any[]) => any;
-        toJson: (obj: any, pretty?: boolean) => string;
-        fromJson: (obj: string) => any;
-        forEach;
-        noop: (...args: any[]) => void;
+        static isDefined: (val: any) => boolean;
+        static isUndefined: (val: any) => boolean;
+        static isObject: (val: any) => boolean;
+        static isArray: (val: any) => boolean;
+        static isString: (val: any) => boolean;
+        static extend: (destination: any, ...sources: any[]) => any;
+        static toJson: (obj: any, pretty?: boolean) => string;
+        static fromJson: (obj: string) => any;
+        static forEach;
+        static noop: (...args: any[]) => void;
 
         constructor(angular: angular.IAngularStatic) {
 
 
-            this.isDefined = angular.isDefined,
-                this.isUndefined = angular.isUndefined,
-                this.isObject = angular.isObject,
-                this.isArray = angular.isArray,
-                this.isString = angular.isString,
-                this.extend = angular.extend,
-                this.toJson = angular.toJson,
-                this.fromJson = angular.fromJson,
-                this.forEach = angular.forEach,
-                this.noop = angular.noop;
+            Tools.isDefined = angular.isDefined,
+            Tools.isUndefined = angular.isUndefined,
+            Tools.isObject = angular.isObject,
+            Tools.isArray = angular.isArray,
+            Tools.isString = angular.isString,
+            Tools.extend = angular.extend,
+            Tools.toJson = angular.toJson,
+            Tools.fromJson = angular.fromJson,
+            Tools.forEach = angular.forEach,
+            Tools.noop = angular.noop;
         }
 
-        isNullOrUndefined(val) {
-            return this.isUndefined(val) || val === null;
+       static isNullOrUndefined(val) {
+            return Tools.isUndefined(val) || val === null;
         }
 
-        isNumber(n: any) {
+       static isNumber(n: any) {
             return !isNaN(parseFloat(n)) && isFinite(n);
         }
 
-        generateGUID() {
+       static generateGUID() {
             var value = [];
             var digits = "0123456789abcdef";
             for (var i = 0; i < 36; i++) {

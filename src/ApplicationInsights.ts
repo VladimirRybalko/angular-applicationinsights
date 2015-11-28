@@ -15,29 +15,29 @@
         private _window: angular.IWindowService;
         private _location: angular.ILocationService;
         private _exceptionStackParser: StackParser;
-        private _tools: Tools;
+        
         private _log: any;
         private _exceptionHandler: any;
 
         private _logInterceptor: LogInterceptor;
         private _exceptionInterceptor: ExceptionInterceptor;
         private _sessionKey = '$$appInsights__session';
-        private _options: Options;
+        options: Options;
 
-        private _namespace = 'Microsoft.ApplicationInsights.';
-        private _names = {
-            pageViews: this._namespace + 'Pageview',
-            traceMessage: this._namespace + 'Message',
-            events: this._namespace + 'Event',
-            metrics: this._namespace + 'Metric',
-            exception: this._namespace + 'Exception'
+        private static namespace = 'Microsoft.ApplicationInsights.';
+        private static names = {
+            pageViews: ApplicationInsights.namespace + 'Pageview',
+            traceMessage: ApplicationInsights.namespace + 'Message',
+            events: ApplicationInsights.namespace + 'Event',
+            metrics: ApplicationInsights.namespace + 'Metric',
+            exception: ApplicationInsights.namespace + 'Exception'
         };
-        private _types = {
-            pageViews: this._namespace + 'PageviewData',
-            traceMessage: this._namespace + 'MessageData',
-            events: this._namespace + 'EventData',
-            metrics: this._namespace + 'MetricData',
-            exception: this._namespace + 'ExceptionData'
+        private static types = {
+            pageViews: ApplicationInsights.namespace + 'PageviewData',
+            traceMessage: ApplicationInsights.namespace + 'MessageData',
+            events: ApplicationInsights.namespace + 'EventData',
+            metrics: ApplicationInsights.namespace + 'MetricData',
+            exception: ApplicationInsights.namespace + 'ExceptionData'
         };
 
         private _commonProperties: any;
@@ -45,6 +45,8 @@
         private _version = 'angular:0.2.6';
         private _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
         private _contentType = 'application/json';
+        
+        
 
 
         constructor(localStorage: AppInsightsStorage,
@@ -53,28 +55,31 @@
             $window: angular.IWindowService,
             $location: angular.ILocationService,
             exceptionStackParser: StackParser,
-            tools: Tools,
+            
             logInterceptor: LogInterceptor,
             exceptionInterceptor: ExceptionInterceptor,
             options: Options) {
+            
             this._localStorage = localStorage;
             this._http = $http;
             this._locale = $locale;
             this._window = $window;
             this._location = $location;
             this._exceptionStackParser = exceptionStackParser;
-            this._tools = tools;
-            this._options = options;
+            
+            this.options = options;
             this._log = logInterceptor.getPrivateLoggingObject();
             this._exceptionHandler = exceptionInterceptor.getPrivateExceptionHanlder();
+            this._logInterceptor = logInterceptor;
+            this._exceptionInterceptor = exceptionInterceptor;
 
 
             // set traceTraceMessage as the intercept method of the log decorator
-            if (this._options.autoLogTracking) {
-                this._logInterceptor.setInterceptFunction(this.trackTraceMessage);
+            if (this.options.autoLogTracking) {
+                this._logInterceptor.setInterceptFunction((message, level, properties?) => this.trackTraceMessage(message, level, properties));
             }
-            if (this._options.autoExceptionTracking) {
-                this._exceptionInterceptor.setInterceptFunction(this.trackException);
+            if (this.options.autoExceptionTracking) {
+                this._exceptionInterceptor.setInterceptFunction((exception, cause) => this.trackException(exception, cause));
             }
 
         }
@@ -84,8 +89,8 @@
             const uuidKey = '$$appInsights__uuid';
             // see if there is already an id stored locally, if not generate a new value
             var uuid = this._localStorage.get(uuidKey);
-            if (this._tools.isNullOrUndefined(uuid)) {
-                uuid = this._tools.generateGUID();
+            if (Tools.isNullOrUndefined(uuid)) {
+                uuid = Tools.generateGUID();
                 this._localStorage.set(uuidKey, uuid);
             }
             return uuid;
@@ -94,7 +99,7 @@
         private makeNewSession() {
             // no existing session data
             var sessionData = {
-                id: this._tools.generateGUID(),
+                id: Tools.generateGUID(),
                 accessed: new Date().getTime()
             };
             this._localStorage.set(this._sessionKey, sessionData);
@@ -106,16 +111,16 @@
 
             var sessionData = this._localStorage.get(this._sessionKey);
 
-            if (this._tools.isNullOrUndefined(sessionData)) {
+            if (Tools.isNullOrUndefined(sessionData)) {
 
                 // no existing session data
                 sessionData = this.makeNewSession();
             } else {
 
 
-                var lastAccessed = this._tools.isNullOrUndefined(sessionData.accessed) ? 0 : sessionData.accessed;
+                var lastAccessed = Tools.isNullOrUndefined(sessionData.accessed) ? 0 : sessionData.accessed;
                 var now = new Date().getTime();
-                if ((now - lastAccessed > this._options.sessionInactivityTimeout)) {
+                if ((now - lastAccessed > this.options.sessionInactivityTimeout)) {
 
                     // this session is expired, make a new one
                     sessionData = this.makeNewSession();
@@ -132,18 +137,18 @@
 
 
         private validateMeasurements(measurements) {
-            if (this._tools.isNullOrUndefined(measurements)) {
+            if (Tools.isNullOrUndefined(measurements)) {
                 return null;
             }
 
-            if (!this._tools.isObject(measurements)) {
+            if (!Tools.isObject(measurements)) {
                 this._log.warn('The value of the measurements parameter must be an object consisting of a string/number pairs.');
                 return null;
             }
 
             var validatedMeasurements = {};
             for (var metricName in measurements) {
-                if (this._tools.isNumber(measurements[metricName])) {
+                if (Tools.isNumber(measurements[metricName])) {
                     validatedMeasurements[metricName] = measurements[metricName];
                 } else {
                     this._log.warn('The value of measurement ' + metricName + ' is not a number.');
@@ -156,11 +161,11 @@
 
         private validateProperties(properties) {
 
-            if (this._tools.isNullOrUndefined(properties)) {
+            if (Tools.isNullOrUndefined(properties)) {
                 return null;
             }
 
-            if (!this._tools.isObject(properties)) {
+            if (!Tools.isObject(properties)) {
                 this._log.warn('The value of the properties parameter must be an object consisting of a string/string pairs.');
                 return null;
             }
@@ -168,7 +173,7 @@
             var validateProperties = {};
             for (var propName in properties) {
                 var currentProp = properties[propName];
-                if (!this._tools.isNullOrUndefined(currentProp) && !this._tools.isObject(currentProp) && !this._tools.isArray(currentProp)) {
+                if (!Tools.isNullOrUndefined(currentProp) && !Tools.isObject(currentProp) && !Tools.isArray(currentProp)) {
                     validateProperties[propName] = currentProp;
                 } else {
                     this._log.warn('The value of property ' + propName + ' could not be determined to be a string or number.');
@@ -244,15 +249,15 @@
             }
         }
 
-        trackPageView(pageName, pageUrl, properties, measurements) {
+        trackPageView(pageName?, pageUrl?, properties?, measurements?) {
             // TODO: consider possible overloads (no name or url but properties and measurements)
 
-            var data = this.generateAppInsightsData(this._names.pageViews,
-                this._types.pageViews,
+            var data = this.generateAppInsightsData(ApplicationInsights.names.pageViews,
+                ApplicationInsights.types.pageViews,
                 {
                     ver: 1,
-                    url: this._tools.isNullOrUndefined(pageUrl) ? this._location.absUrl() : pageUrl,
-                    name: this._tools.isNullOrUndefined(pageName) ? this._location.path() : pageName,
+                    url: Tools.isNullOrUndefined(pageUrl) ? this._location.absUrl() : pageUrl,
+                    name: Tools.isNullOrUndefined(pageName) ? this._location.path() : pageName,
                     properties: this.validateProperties(properties),
                     measurements: this.validateMeasurements(measurements)
                 });
@@ -260,8 +265,8 @@
         }
 
         trackEvent(eventName, properties, measurements) {
-            var data = this.generateAppInsightsData(this._names.events,
-                this._types.events,
+            var data = this.generateAppInsightsData(ApplicationInsights.names.events,
+                ApplicationInsights.types.events,
                 {
                     ver: 1,
                     name: eventName,
@@ -272,12 +277,12 @@
         }
 
         trackTraceMessage(message, level, properties?) {
-            if (this._tools.isNullOrUndefined(message) || !this._tools.isString(message)) {
+            if (Tools.isNullOrUndefined(message) || !Tools.isString(message)) {
                 return;
             }
 
-            var data = this.generateAppInsightsData(this._names.traceMessage,
-                this._types.traceMessage,
+            var data = this.generateAppInsightsData(ApplicationInsights.names.traceMessage,
+                ApplicationInsights.types.traceMessage,
                 {
                     ver: 1,
                     message: message,
@@ -288,8 +293,8 @@
         }
 
         trackMetric(name, value, properties) {
-            var data = this.generateAppInsightsData(this._names.metrics,
-                this._types.metrics,
+            var data = this.generateAppInsightsData(ApplicationInsights.names.metrics,
+                ApplicationInsights.types.metrics,
                 {
                     ver: 1,
                     metrics: [{ name: name, value: value }],
@@ -299,15 +304,15 @@
         }
 
         trackException(exception, cause) {
-            if (this._tools.isNullOrUndefined(exception)) {
+            if (Tools.isNullOrUndefined(exception)) {
                 return;
             }
 
             // parse the stack
             var parsedStack = this._exceptionStackParser.parse(exception);
 
-            var data = this.generateAppInsightsData(this._names.exception,
-                this._types.exception,
+            var data = this.generateAppInsightsData(ApplicationInsights.names.exception,
+                ApplicationInsights.types.exception,
                 {
                     ver: 1,
                     handledAt: 'Unhandled',
@@ -317,7 +322,7 @@
                             message: exception.message,
                             stack: exception.stack,
                             parsedStack: parsedStack,
-                            hasFullStack: !this._tools.isNullOrUndefined(parsedStack)
+                            hasFullStack: !Tools.isNullOrUndefined(parsedStack)
                         }
                     ]
                 });
@@ -328,20 +333,20 @@
 
             if (this._commonProperties) {
                 payloadData.properties = payloadData.properties || {};
-                this._tools.extend(payloadData.properties, this._commonProperties);
+                Tools.extend(payloadData.properties, this._commonProperties);
             }
 
             return {
                 name: payloadName,
                 time: new Date().toISOString(),
                 ver: 1,
-                iKey: this._options.instrumentationKey,
+                iKey: this.options.instrumentationKey,
                 user: { id: this.getUUID() },
                 session: {
                     id: this.getSessionID()
                 },
                 operation: {
-                    id: this._tools.generateGUID()
+                    id: Tools.generateGUID()
                 },
                 device: {
                     id: 'browser',
@@ -361,7 +366,7 @@
         setCommonProperties(data) {
             this.validateProperties(data);
             this._commonProperties = this._commonProperties || {};
-            this._tools.extend(this._commonProperties, data);
+            Tools.extend(this._commonProperties, data);
         }
     }
 

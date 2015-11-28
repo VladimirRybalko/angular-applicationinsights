@@ -24,16 +24,24 @@
   <ItemGroup>
     <Content Include="bower.json" />
     <Content Include="package.json" />
+    <Content Include="src\Storage.ts" />
+    <TypeScriptCompile Include="src\angularModule.ts" />
+    <TypeScriptCompile Include="src\ApplicationInsights.ts" />
+    <TypeScriptCompile Include="src\Options.ts" />
+    <TypeScriptCompile Include="src\stackParser.ts" />
+    <TypeScriptCompile Include="src\TelemetryRequest.ts" />
+    <TypeScriptCompile Include="src\typings\angularjs\angular.d.ts" />
+    <TypeScriptCompile Include="src\typings\jquery\jquery.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Gruntfile.js" />
     <Content Include="karma.conf.js" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="ExceptionInterceptor.ts" />
-    <TypeScriptCompile Include="LogInterceptor.ts" />
-    <TypeScriptCompile Include="StackFrame.ts" />
-    <TypeScriptCompile Include="Tools.ts" />
+    <TypeScriptCompile Include="src\ExceptionInterceptor.ts" />
+    <TypeScriptCompile Include="src\LogInterceptor.ts" />
+    <TypeScriptCompile Include="src\StackFrame.ts" />
+    <TypeScriptCompile Include="src\Tools.ts" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">12.0</VisualStudioVersion>
@@ -63,7 +71,18 @@
   </ProjectExtensions>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <TypeScriptRemoveComments>false</TypeScriptRemoveComments>
-    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <TypeScriptSourceMap>False</TypeScriptSourceMap>
+    <TypeScriptTarget>ES5</TypeScriptTarget>
+    <TypeScriptJSXEmit>None</TypeScriptJSXEmit>
+    <TypeScriptCompileOnSaveEnabled>True</TypeScriptCompileOnSaveEnabled>
+    <TypeScriptNoImplicitAny>False</TypeScriptNoImplicitAny>
+    <TypeScriptModuleKind>None</TypeScriptModuleKind>
+    <TypeScriptOutFile>build/angular-applicationinsights.js</TypeScriptOutFile>
+    <TypeScriptOutDir />
+    <TypeScriptGeneratesDeclarations>False</TypeScriptGeneratesDeclarations>
+    <TypeScriptNoEmitOnError>True</TypeScriptNoEmitOnError>
+    <TypeScriptMapRoot />
+    <TypeScriptSourceRoot />
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <TypeScriptRemoveComments>true</TypeScriptRemoveComments>
