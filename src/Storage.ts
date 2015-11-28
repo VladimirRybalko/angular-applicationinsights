@@ -205,9 +205,9 @@
             }
 
             // If this browser does not support local storage use cookies
-            if (!this.browserSupportsLocalStorage || this._self.storageType === 'cookie') {
+            if (!this.browserSupportsLocalStorage() || this._self.storageType === 'cookie') {
 
-                if (!this.browserSupportsLocalStorage) {
+                if (!this.browserSupportsLocalStorage()) {
                     this._$rootScope.$broadcast('AngularAppInsights.Storage.notification.warning', 'LOCAL_STORAGE_NOT_SUPPORTED');
                 }
 
@@ -239,8 +239,8 @@
         // Example use: localStorageService.get('library'); // returns 'angular'
         private getFromLocalStorage(key) {
 
-            if (!this.browserSupportsLocalStorage || this._self.storageType === 'cookie') {
-                if (!this.browserSupportsLocalStorage) {
+            if (!this.browserSupportsLocalStorage() || this._self.storageType === 'cookie') {
+                if (!this.browserSupportsLocalStorage()) {
                     this._$rootScope.$broadcast('AngularAppInsights.Storage.notification.warning', 'LOCAL_STORAGE_NOT_SUPPORTED');
                 }
 

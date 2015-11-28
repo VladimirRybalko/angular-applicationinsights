@@ -25,6 +25,11 @@
     <Content Include="bower.json" />
     <Content Include="package.json" />
     <Content Include="src\Storage.ts" />
+    <Content Include="test\appInsights-tests.js" />
+    <Content Include="test\captured-errors.js" />
+    <Content Include="test\stackParser-tests.js" />
+    <Content Include="test\storage-tests.js" />
+    <Content Include="test\test-helper.js" />
     <TypeScriptCompile Include="src\angularModule.ts" />
     <TypeScriptCompile Include="src\ApplicationInsights.ts" />
     <TypeScriptCompile Include="src\Options.ts" />
