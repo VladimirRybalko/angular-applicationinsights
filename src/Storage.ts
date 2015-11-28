@@ -110,7 +110,7 @@
         }
 
         // Checks the browser to see if cookies are supported
-        private browserSupportsCookies() {
+         browserSupportsCookies() {
             try {
                 return this._$window.navigator.cookieEnabled ||
                 ("cookie" in this._$document && (this._$document.cookie.length > 0 ||
@@ -124,7 +124,7 @@
         // Directly adds a value to cookies
         // Typically used as a fallback is local storage is not available in the browser
         // Example use: localStorageService.cookie.add('library','angular');
-        private addToCookies(key, value) {
+         addToCookies(key, value) {
 
             if (this._tools.isUndefined(value)) {
                 return false;
@@ -197,6 +197,7 @@
         // If local storage is not available in the browser use cookies
         // Example use: localStorageService.add('library','angular');
         private addToLocalStorage(key, value) {
+
             // Let's convert undefined values to null to get the value consistent
             if (this._tools.isUndefined(value)) {
                 value = null;
@@ -206,6 +207,7 @@
 
             // If this browser does not support local storage use cookies
             if (!this.browserSupportsLocalStorage || this._self.storageType === 'cookie') {
+
                 if (!this.browserSupportsLocalStorage) {
                     this._$rootScope.$broadcast('AngularAppInsights.Storage.notification.warning', 'LOCAL_STORAGE_NOT_SUPPORTED');
                 }
@@ -227,6 +229,7 @@
                     this._$rootScope.$broadcast('AngularAppInsights.Storage.notification.setitem', { key: key, newvalue: value, storageType: this._self.storageType });
                 }
             } catch (e) {
+
                 this._$rootScope.$broadcast('AngularAppInsights.Storage.notification.error', e.message);
                 return this.addToCookies(key, value);
             }
@@ -270,7 +273,7 @@
 
 
         set(key: any, value: any) {
-            this.addToLocalStorage(key, value);
+            return this.addToLocalStorage(key, value);
         }
 
         get(key: any) {
@@ -282,16 +285,16 @@
             return this._deriveQualifiedKey(key);
         }
 
-        cookie = {
-            isSupported() {
+      
+            isCookiesSupported() {
                 return this.browserSupportsCookies();
-            },
-            set(key: any, value: any) {
+            }
+            setCookie(key: any, value: any) {
                 this.addToCookies(key, value);
-            },
-            get(key: any) {
+            }
+            getCookie(key: any) {
                 return this.getFromCookies(key);
             }
-        }
+        
     }
 

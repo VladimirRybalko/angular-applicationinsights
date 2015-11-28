@@ -3,7 +3,8 @@
 describe('ErrorStackParser', function () {
 
     describe('#parse', function () {
-        var unit = window.root.errorStackParser;
+        var tools = new Tools(angular);
+        var unit = new StackParser(tools);
 
         it('should not parse IE 9 Error', function() {
         	var stack =  unit.parse(CapturedExceptions.IE_9);
