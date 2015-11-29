@@ -24,14 +24,14 @@ describe('Application Insights for Angular JS Provider', function(){
       		$httpBackend.verifyNoOutstandingRequest();
  	});
 
-	describe('Configuration Settings', function(){
+	describe('Configuration Settings', function() {
 
 		it('Should remember the configured application name', function(){
-      		expect(_insights.applicationName).toEqual('angularjs-appinsights-unittests');
+      		expect(_insights.options.applicationName).toEqual('angularjs-appinsights-unittests');
     	});
 
     	it('Should remember that automatic pageview tracking is disabled for tests', function(){
-    		expect(_insights.autoPageViewTracking).toEqual(false);
+    		expect(_insights.options.autoPageViewTracking).toEqual(false);
     	});
 	});
 

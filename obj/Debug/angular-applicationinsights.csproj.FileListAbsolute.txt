@@ -1,0 +1,5 @@
+E:\code\git\angularInsights\bin\angular-applicationinsights.dll
+E:\code\git\angularInsights\bin\angular-applicationinsights.pdb
+E:\code\git\angularInsights\obj\Debug\angular-applicationinsights.csprojResolveAssemblyReference.cache
+E:\code\git\angularInsights\obj\Debug\angular-applicationinsights.dll
+E:\code\git\angularInsights\obj\Debug\angular-applicationinsights.pdb

@@ -3,22 +3,21 @@
 describe('ErrorStackParser', function () {
 
     describe('#parse', function () {
-        var unit = window.root.errorStackParser;
 
         it('should not parse IE 9 Error', function() {
-        	var stack =  unit.parse(CapturedExceptions.IE_9);
+            var stack = StackParser.parse(CapturedExceptions.IE_9);
             expect(stack).toEqual(null);
         });
 
         it('should output stack frames in a readable format', function(){
-        	var stackFrames = unit.parse(CapturedExceptions.SAFARI_6);
+            var stackFrames = StackParser.parse(CapturedExceptions.SAFARI_6);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
             expect(stackFrames[1].toString()).toEqual('dumpException3()@http://path/to/file.js:52');
         });
 
         it('should parse Safari 6 Error.stack', function () {
-            var stackFrames = unit.parse(CapturedExceptions.SAFARI_6);
+            var stackFrames = StackParser.parse(CapturedExceptions.SAFARI_6);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
             expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 48]);
@@ -27,7 +26,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse Safari 7 Error.stack', function () {
-            var stackFrames = unit.parse(CapturedExceptions.SAFARI_7);
+            var stackFrames = StackParser.parse(CapturedExceptions.SAFARI_7);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
             expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 48, 22]);
@@ -36,7 +35,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse Safari 8 Error.stack', function () {
-            var stackFrames = unit.parse(CapturedExceptions.SAFARI_8);
+            var stackFrames = StackParser.parse(CapturedExceptions.SAFARI_8);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
             expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 47, 22]);
@@ -45,7 +44,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse Firefox 31 Error.stack', function () {
-            var stackFrames = unit.parse(CapturedExceptions.FIREFOX_31);
+            var stackFrames = StackParser.parse(CapturedExceptions.FIREFOX_31);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(2);
             expect(stackFrames[0]).toMatchStackFrame(['foo', undefined, 'http://path/to/file.js', 41, 13]);
@@ -53,7 +52,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse V8 Error.stack', function () {
-            var stackFrames = unit.parse(CapturedExceptions.CHROME_15);
+            var stackFrames = StackParser.parse(CapturedExceptions.CHROME_15);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(4);
             expect(stackFrames[0]).toMatchStackFrame(['bar', undefined, 'http://path/to/file.js', 13, 17]);
@@ -63,20 +62,20 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse V8 entries with no location', function () {
-            var stackFrames = unit.parse({stack: "Error\n at Array.forEach (native)"});
+            var stackFrames = StackParser.parse({ stack: "Error\n at Array.forEach (native)" });
             expect(stackFrames.length).toBe(1);
             expect(stackFrames[0]).toMatchStackFrame(['Array.forEach', undefined, undefined, undefined, undefined]);
         });
 
         it('should parse V8 Error.stack entries with port numbers', function () {
-            var stackFrames = unit.parse(CapturedExceptions.CHROME_36);
+            var stackFrames = StackParser.parse(CapturedExceptions.CHROME_36);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(2);
             expect(stackFrames[0]).toMatchStackFrame(['dumpExceptionError', undefined, 'http://localhost:8080/file.js', 41, 27]);
         });
 
         it('should parse IE 10 Error stacks', function () {
-            var stackFrames = unit.parse(CapturedExceptions.IE_10);
+            var stackFrames = StackParser.parse(CapturedExceptions.IE_10);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
             expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 48, 13]);
@@ -85,7 +84,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse IE 11 Error stacks', function () {
-            var stackFrames = unit.parse(CapturedExceptions.IE_11);
+            var stackFrames = StackParser.parse(CapturedExceptions.IE_11);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
             expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 47, 21]);
@@ -94,7 +93,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse Opera 9.27 Error messages', function () {
-            var stackFrames = unit.parse(CapturedExceptions.OPERA_927);
+            var stackFrames = StackParser.parse(CapturedExceptions.OPERA_927);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
             expect(stackFrames[0]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 43]);
@@ -103,7 +102,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse Opera 10 Error messages', function () {
-            var stackFrames = unit.parse(CapturedExceptions.OPERA_10);
+            var stackFrames = StackParser.parse(CapturedExceptions.OPERA_10);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(7);
             expect(stackFrames[0]).toMatchStackFrame([undefined, undefined, 'http://path/to/file.js', 42]);
@@ -116,7 +115,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse Opera 11 Error messages', function () {
-            var stackFrames = unit.parse(CapturedExceptions.OPERA_11);
+            var stackFrames = StackParser.parse(CapturedExceptions.OPERA_11);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(4);
             expect(stackFrames[0]).toMatchStackFrame(['run', undefined, 'http://path/to/file.js', 27]);
@@ -126,7 +125,7 @@ describe('ErrorStackParser', function () {
         });
 
         it('should parse Opera 25 Error stacks', function () {
-            var stackFrames = unit.parse(CapturedExceptions.OPERA_25);
+            var stackFrames = StackParser.parse(CapturedExceptions.OPERA_25);
             expect(stackFrames).toBeTruthy();
             expect(stackFrames.length).toBe(3);
             expect(stackFrames[0]).toMatchStackFrame(['unknown', undefined, 'http://path/to/file.js', 47, 22]);
