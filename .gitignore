@@ -12,3 +12,5 @@ npm-debug.log
 
 /src/*.js
 /src/*.map
+/*.map
+*.map
