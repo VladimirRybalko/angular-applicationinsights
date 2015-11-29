@@ -7,7 +7,7 @@ module.exports = function(grunt) {
                 src: ["**/*.ts", "!node_modules/**/*.ts"],
                 
                 options: {
-                    comment: true
+                    comments: true
                 },
                 out: "build/angular-applicationinsights.js"
             }
@@ -71,7 +71,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-karma-coveralls');
 
   
-  grunt.registerTask('default', ['ts','karma','concat','strip_code','uglify']);
-  grunt.registerTask('travis',['ts','jshint','karma','concat','strip_code','uglify','coveralls']);
+  grunt.registerTask('default', ['ts', 'karma', 'concat', 'strip_code', 'uglify']);
+  grunt.registerTask('travis',['ts','karma','concat','strip_code','uglify','coveralls']);
 
 };

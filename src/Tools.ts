@@ -27,7 +27,7 @@
             Tools.toJson = angular.toJson,
             Tools.fromJson = angular.fromJson,
             Tools.forEach = angular.forEach,
-            Tools.noop = angular.noop;
+            Tools.noop = angular.noop; // jshint ignore:line
         }
 
        static isNullOrUndefined(val) {

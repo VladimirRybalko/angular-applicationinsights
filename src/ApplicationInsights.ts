@@ -218,9 +218,9 @@
             for (var postHeader in <any>this._http.defaults.headers.post) {
                 headers[postHeader] = undefined;
             }
-
-            headers["Accept"] = this._contentType;
-            headers['Content-Type'] = this._contentType;
+            
+            headers["Accept"] = this._contentType; // jshint ignore:line
+            headers["Content-Type"] = this._contentType;
 
             var request: TelemetryRequest =
             {
@@ -329,7 +329,7 @@
             this.sendData(data);
         }
 
-        generateAppInsightsData(payloadName, payloadDataType, payloadData) {
+       private generateAppInsightsData(payloadName, payloadDataType, payloadData) {
 
             if (this._commonProperties) {
                 payloadData.properties = payloadData.properties || {};
