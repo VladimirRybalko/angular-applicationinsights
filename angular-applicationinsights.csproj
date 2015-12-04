@@ -32,6 +32,7 @@
     <Content Include="test\test-helper.js" />
     <TypeScriptCompile Include="src\angularModule.ts" />
     <TypeScriptCompile Include="src\ApplicationInsights.ts" />
+    <TypeScriptCompile Include="src\HTTPRequest.ts" />
     <TypeScriptCompile Include="src\Options.ts" />
     <TypeScriptCompile Include="src\stackParser.ts" />
     <TypeScriptCompile Include="src\TelemetryRequest.ts" />

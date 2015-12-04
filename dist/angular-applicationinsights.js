@@ -1,568 +1,24 @@
-// Code here will be linted with JSHint.
-/* jshint ignore:start */
-(function(angular){
-	var root = {};
-	root.angular = angular;
-// Code here will be ignored by JSHint.
-/* jshint ignore:end */
-/*
-* Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
-*/
-
-
-
-(function(root){
-
-        var isNumber = function(n){ return !isNaN(parseFloat(n)) && isFinite(n);};
-        var isUndefined = root.angular.isUndefined;
-
-    	function StackFrame(functionName, args, fileName, lineNumber, columnNumber, level) {
-        	if (!isUndefined(functionName)) {
-            	this.setFunctionName(functionName);
-        	}
-            if (!isUndefined(columnNumber)) {
-                this.setColumnNumber(columnNumber);
-            }
-            if (!isUndefined(args)) {
-                this.setArgs(args);
-            }
-        	if (!isUndefined(fileName)) {
-            	this.setFileName(fileName);
-        	}
-        	if (!isUndefined(lineNumber)) {
-            	this.setLineNumber(lineNumber);
-        	}
-
-        	if (!isUndefined(level)) {
-            	this.setLevelNumber(level);
-        	}
-    	}
-
-    	StackFrame.prototype = {
-
-            getFunctionName: function () {
-                return this.method;
-            },
-        	setFunctionName: function (v) {
-            	this.method = String(v);
-        	},
-            getArgs: function () {
-                return this.args;
-            },
-            setArgs: function (v) {
-                if (Object.prototype.toString.call(v) !== '[object Array]') {
-                    throw new TypeError('Args must be an Array');
-                }
-                this.args = v;
-            },
-            // NOTE: Property name may be misleading as it includes the path,
-            // but it somewhat mirrors V8's JavaScriptStackTraceApi
-            // https://code.google.com/p/v8/wiki/JavaScriptStackTraceApi and Gecko's
-            // http://mxr.mozilla.org/mozilla-central/source/xpcom/base/nsIException.idl#14
-            getFileName: function () {
-                return this.fileName;
-            },
-        	setFileName: function (v) {
-            	this.fileName = String(v);
-        	},
-            getLineNumber: function () {
-                return this.line;
-            },
-        	setLineNumber: function (v) {
-            	if (!isNumber(v)) {
-
-                	this.line = undefined;
-                    return;
-            	}
-            	this.line = Number(v);
-        	},
-            getColumnNumber: function () {
-                 return this.columnNumber;
-            },
-            setColumnNumber: function (v) {
-                 if (!isNumber(v)) {
-                    this.columnNumber = undefined;
-                    return;
-                }
-                this.columnNumber = Number(v);
-            },
-        	setLevelNumber: function (v) {
-            	if (!isNumber(v)) {
-                	throw new TypeError('Level Number must be a Number');
-            	}
-            	this.level = Number(v);
-        	},
-            toString: function() {
-                var functionName = this.getFunctionName() || '{anonymous}';
-                var args = '(' + (this.getArgs() || []).join(',') + ')';
-                var fileName = this.getFileName() ? ('@' + this.getFileName()) : '';
-                var lineNumber = isNumber(this.getLineNumber()) ? (':' + this.getLineNumber()) : '';
-                var columnNumber = isNumber(this.getColumnNumber()) ? (':' + this.getColumnNumber()) : '';
-                return functionName + args + fileName + lineNumber + columnNumber;
-            }
-
-    	};
-
-    root.StackFrame = StackFrame;
- })(root);
-/*
-* Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
-*/
-
-
-
-(function(root){
-
-	var StackFrame = root.StackFrame;
-
-  	var FIREFOX_SAFARI_STACK_REGEXP = /\S+\:\d+/;
-    var CHROME_IE_STACK_REGEXP = /\s+at /;
-	var exceptionStackParser =  {
-        /**
-         * Given an Error object, extract the most information from it.
-         * @param error {Error}
-         * @return Array[StackFrame]
-         */
-        parse: function ErrorStackParser$$parse(error) {
-            if (typeof error.stacktrace !== 'undefined' || typeof error['opera#sourceloc'] !== 'undefined') {
-                return this.parseOpera(error);
-            } else if (error.stack && error.stack.match(CHROME_IE_STACK_REGEXP)) {
-                return this.parseV8OrIE(error);
-            } else if (error.stack && error.stack.match(FIREFOX_SAFARI_STACK_REGEXP)) {
-                return this.parseFFOrSafari(error);
-            } else {
-                return null;
-            }
-        },
-
-        /**
-         * Separate line and column numbers from a URL-like string.
-         * @param urlLike String
-         * @return Array[String]
-         */
-        extractLocation: function ErrorStackParser$$extractLocation(urlLike) {
-            // Guard against strings like "(native)"
-            if (urlLike.indexOf(':') === -1) {
-                return [];
-            }
-
-            var locationParts = urlLike.split(':');
-            var lastNumber = locationParts.pop();
-            var possibleNumber = locationParts[locationParts.length - 1];
-            if (!isNaN(parseFloat(possibleNumber)) && isFinite(possibleNumber)) {
-                var lineNumber = locationParts.pop();
-                return [locationParts.join(':'), lineNumber, lastNumber];
-            } else {
-                return [locationParts.join(':'), lastNumber, undefined];
-            }
-        },
-
-          parseV8OrIE: function ErrorStackParser$$parseV8OrIE(error) {
-        	var level =0;
-            return error.stack.split('\n').slice(1).map(function (line) {
-                var tokens = line.replace(/^\s+/, '').split(/\s+/).slice(1);
-                var locationParts = tokens[0] !== undefined ? this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, '')) : ['unknown','unknown','unknown'];
-                var functionName = (!tokens[0] || tokens[0] === 'Anonymous') ? 'unknown' : tokens[0];
-                return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
-            }, this);
-        },
-
-        parseFFOrSafari: function ErrorStackParser$$parseFFOrSafari(error) {
-        	var level=0;
-            return error.stack.split('\n').filter(function (line) {
-                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP);
-            }, this).map(function (line) {
-                var tokens = line.split('@');
-                var locationParts = this.extractLocation(tokens.pop());
-                var functionName = tokens.shift() || 'unknown';
-                return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
-            }, this);
-        },
-
-        parseOpera: function ErrorStackParser$$parseOpera(e) {
-            if (!e.stacktrace || (e.message.indexOf('\n') > -1 &&
-                e.message.split('\n').length > e.stacktrace.split('\n').length)) {
-                return this.parseOpera9(e);
-            } else if (!e.stack) {
-                return this.parseOpera10(e);
-            } else {
-                return this.parseOpera11(e);
-            }
-        },
-
-        parseOpera9: function ErrorStackParser$$parseOpera9(e) {
-            var lineRE = /Line (\d+).*script (?:in )?(\S+)/i;
-            var lines = e.message.split('\n');
-            var result = [];
-            var level =0;
-            for (var i = 2, len = lines.length; i < len; i += 2) {
-                var match = lineRE.exec(lines[i]);
-                if (match) {
-                    result.push(new StackFrame(undefined, undefined, match[2], match[1], undefined, level++));
-                }
-            }
-
-            return result;
-        },
-
-        parseOpera10: function ErrorStackParser$$parseOpera10(e) {
-            var lineRE = /Line (\d+).*script (?:in )?(\S+)(?:: In function (\S+))?$/i;
-            var lines = e.stacktrace.split('\n');
-            var result = [];
-            var level =0;
-            for (var i = 0, len = lines.length; i < len; i += 2) {
-                var match = lineRE.exec(lines[i]);
-                if (match) {
-                    result.push(new StackFrame(match[3] || undefined, undefined, match[2], match[1], undefined, level++));
-                }
-            }
-
-            return result;
-        },
-
-        // Opera 10.65+ Error.stack very similar to FF/Safari
-        parseOpera11: function ErrorStackParser$$parseOpera11(error) {
-            var level =0;
-            return error.stack.split('\n').filter(function (line) {
-                return !!line.match(FIREFOX_SAFARI_STACK_REGEXP) &&
-                    !line.match(/^Error created at/);
-            }, this).map(function (line) {
-                var tokens = line.split('@');
-                var locationParts = this.extractLocation(tokens.pop());
-                var functionCall = (tokens.shift() || '');
-                var functionName = functionCall
-                        .replace(/<anonymous function(: (\w+))?>/, '$2')
-                        .replace(/\([^\)]*\)/g, '') || undefined;
-                var argsRaw;
-                if (functionCall.match(/\(([^\)]*)\)/)) {
-                    argsRaw = functionCall.replace(/^[^\(]+\(([^\)]*)\)$/, '$1');
-                }
-                var args = (argsRaw === undefined || argsRaw === '[arguments not available]') ? undefined : argsRaw.split(',');
-                return new StackFrame(functionName, args, locationParts[0], locationParts[1], locationParts[2],level++);
-            }, this);
-        }
-    };
-
-    root.errorStackParser = exceptionStackParser;
-
-})(root);
-
-/*
-* Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
-*/
-
-
-(function ( root, angular) {
-/*jshint globalstrict:true*/
-'use strict';
-
-var isDefined = angular.isDefined,
-  isUndefined = angular.isUndefined,
-  isNumber = angular.isNumber,
-  isObject = angular.isObject,
-  isArray = angular.isArray,
-  extend = angular.extend,
-  toJson = angular.toJson,
-  fromJson = angular.fromJson;
-
-
-// Test if string is only contains numbers
-// e.g '1' => true, "'1'" => true
-function isStringNumber(num) {
-  return  /^-?\d+\.?\d*$/.test(num.replace(/["']/g, ''));
-}
-
-
-  var defaultConfig ={
-  // You should set a prefix to avoid overwriting any local storage variables from the rest of your app
-  // e.g. localStorageServiceProvider.setPrefix('youAppName');
-  // With provider you can use config as this:
-  // myApp.config(function (localStorageServiceProvider) {
-  //    localStorageServiceProvider.prefix = 'yourAppName';
-  // });
-    prefix : 'ls',
-
-  // You could change web storage type localstorage or sessionStorage
-    storageType : 'localStorage',
-
-  // Cookie options (usually in case of fallback)
-  // expiry = Number of days before cookies expire // 0 = Does not expire
-  // path = The web path the cookie represents
-    cookie : {
-      expiry: 30,
-      path: '/'
-    },
-
-  // Send signals for each of the following actions?
-    notify : {
-      setItem: true,
-      removeItem: false
+/// <reference path="typings/angularjs/angular.d.ts" />
+var Tools = (function () {
+    function Tools(angular) {
+        Tools.isDefined = angular.isDefined,
+            Tools.isUndefined = angular.isUndefined,
+            Tools.isObject = angular.isObject,
+            Tools.isArray = angular.isArray,
+            Tools.isString = angular.isString,
+            Tools.extend = angular.extend,
+            Tools.toJson = angular.toJson,
+            Tools.fromJson = angular.fromJson,
+            Tools.forEach = angular.forEach,
+            Tools.noop = angular.noop; // jshint ignore:line
     }
-  };
-
- 
-
-  root.storage = function(settings) {
-
-    var config = extend(defaultConfig, settings);
-    var self = config;
-    var prefix = config.prefix;
-    var cookie = config.cookie;
-    var notify = config.notify;
-    var storageType = config.storageType;
-    var webStorage;
-    var $rootScope = config.rootScope;
-    var $window = config.window;
-    var $document = config.document;
-    var $parse = config.parse;
-
-
-    // When Angular's $document is not available
-    if (!$document) {
-      $document = document;
-    } else if ($document[0]) {
-      $document = $document[0];
-    }
-
-    // If there is a prefix set in the config lets use that with an appended period for readability
-    if (prefix.substr(-1) !== '.') {
-      prefix = !!prefix ? prefix + '.' : '';
-    }
-    var deriveQualifiedKey = function(key) {
-      return prefix + key;
+    Tools.isNullOrUndefined = function (val) {
+        return Tools.isUndefined(val) || val === null;
     };
-    // Checks the browser to see if local storage is supported
-    var browserSupportsLocalStorage = (function () {
-      try {
-        var supported = (storageType in $window && $window[storageType] !== null);
-
-        // When Safari (OS X or iOS) is in private browsing mode, it appears as though localStorage
-        // is available, but trying to call .setItem throws an exception.
-        //
-        // "QUOTA_EXCEEDED_ERR: DOM Exception 22: An attempt was made to add something to storage
-        // that exceeded the quota."
-        var key = deriveQualifiedKey('__' + Math.round(Math.random() * 1e7));
-        if (supported) {
-          webStorage = $window[storageType];
-          webStorage.setItem(key, '');
-          webStorage.removeItem(key);
-        }
-
-        return supported;
-      } catch (e) {
-        storageType = 'cookie';
-        $rootScope.$broadcast('LocalStorageModule.notification.error', e.message);
-        return false;
-      }
-    }());
-
-
-
-    // Directly adds a value to local storage
-    // If local storage is not available in the browser use cookies
-    // Example use: localStorageService.add('library','angular');
-    var addToLocalStorage = function (key, value) {
-      // Let's convert undefined values to null to get the value consistent
-      if (isUndefined(value)) {
-        value = null;
-      } else if (isObject(value) || isArray(value) || isNumber(+value || value)) {
-        value = toJson(value);
-      }
-
-      // If this browser does not support local storage use cookies
-      if (!browserSupportsLocalStorage || self.storageType === 'cookie') {
-        if (!browserSupportsLocalStorage) {
-            $rootScope.$broadcast('LocalStorageModule.notification.warning', 'LOCAL_STORAGE_NOT_SUPPORTED');
-        }
-
-        if (notify.setItem) {
-          $rootScope.$broadcast('LocalStorageModule.notification.setitem', {key: key, newvalue: value, storageType: 'cookie'});
-        }
-        return addToCookies(key, value);
-      }
-
-      try {
-        if (isObject(value) || isArray(value)) {
-          value = toJson(value);
-        }
-        if (webStorage) {
-          webStorage.setItem(deriveQualifiedKey(key), value);
-        }
-        if (notify.setItem) {
-          $rootScope.$broadcast('LocalStorageModule.notification.setitem', {key: key, newvalue: value, storageType: self.storageType});
-        }
-      } catch (e) {
-        $rootScope.$broadcast('LocalStorageModule.notification.error', e.message);
-        return addToCookies(key, value);
-      }
-      return true;
+    Tools.isNumber = function (n) {
+        return !isNaN(parseFloat(n)) && isFinite(n);
     };
-
-    // Directly get a value from local storage
-    // Example use: localStorageService.get('library'); // returns 'angular'
-    var getFromLocalStorage = function (key) {
-
-      if (!browserSupportsLocalStorage || self.storageType === 'cookie') {
-        if (!browserSupportsLocalStorage) {
-          $rootScope.$broadcast('LocalStorageModule.notification.warning','LOCAL_STORAGE_NOT_SUPPORTED');
-        }
-
-        return getFromCookies(key);
-      }
-
-      var item = webStorage ? webStorage.getItem(deriveQualifiedKey(key)) : null;
-      // angular.toJson will convert null to 'null', so a proper conversion is needed
-      // FIXME not a perfect solution, since a valid 'null' string can't be stored
-      if (!item || item === 'null') {
-        return null;
-      }
-
-      if (item.charAt(0) === "{" || item.charAt(0) === "[" || isStringNumber(item)) {
-        return fromJson(item);
-      }
-
-      return item;
-    };
-
-    // Checks the browser to see if cookies are supported
-    var browserSupportsCookies = (function() {
-      try {
-        return $window.navigator.cookieEnabled ||
-          ("cookie" in $document && ($document.cookie.length > 0 ||
-          ($document.cookie = "test").indexOf.call($document.cookie, "test") > -1));
-      } catch (e) {
-          $rootScope.$broadcast('LocalStorageModule.notification.error', e.message);
-          return false;
-      }
-    }());
-
-    // Directly adds a value to cookies
-    // Typically used as a fallback is local storage is not available in the browser
-    // Example use: localStorageService.cookie.add('library','angular');
-    var addToCookies = function (key, value) {
-
-      if (isUndefined(value)) {
-        return false;
-      } else if(isArray(value) || isObject(value)) {
-        value = toJson(value);
-      }
-
-      if (!browserSupportsCookies) {
-        $rootScope.$broadcast('LocalStorageModule.notification.error', 'COOKIES_NOT_SUPPORTED');
-        return false;
-      }
-
-      try {
-        var expiry = '',
-            expiryDate = new Date(),
-            cookieDomain = '';
-
-        if (value === null) {
-          // Mark that the cookie has expired one day ago
-          expiryDate.setTime(expiryDate.getTime() + (-1 * 24 * 60 * 60 * 1000));
-          expiry = "; expires=" + expiryDate.toGMTString();
-          value = '';
-        } else if (cookie.expiry !== 0) {
-          expiryDate.setTime(expiryDate.getTime() + (cookie.expiry * 24 * 60 * 60 * 1000));
-          expiry = "; expires=" + expiryDate.toGMTString();
-        }
-        if (!!key) {
-          var cookiePath = "; path=" + cookie.path;
-          if(cookie.domain){
-            cookieDomain = "; domain=" + cookie.domain;
-          }
-          $document.cookie = deriveQualifiedKey(key) + "=" + encodeURIComponent(value) + expiry + cookiePath + cookieDomain;
-        }
-      } catch (e) {
-        $rootScope.$broadcast('LocalStorageModule.notification.error',e.message);
-        return false;
-      }
-      return true;
-    };
-
-    // Directly get a value from a cookie
-    // Example use: localStorageService.cookie.get('library'); // returns 'angular'
-    var getFromCookies = function (key) {
-      if (!browserSupportsCookies) {
-        $rootScope.$broadcast('LocalStorageModule.notification.error', 'COOKIES_NOT_SUPPORTED');
-        return false;
-      }
-
-      var cookies = $document.cookie && $document.cookie.split(';') || [];
-      for(var i=0; i < cookies.length; i++) {
-        var thisCookie = cookies[i];
-        while (thisCookie.charAt(0) === ' ') {
-          thisCookie = thisCookie.substring(1,thisCookie.length);
-        }
-        if (thisCookie.indexOf(deriveQualifiedKey(key) + '=') === 0) {
-          var storedValues = decodeURIComponent(thisCookie.substring(prefix.length + key.length + 1, thisCookie.length));
-          try{
-            var obj = JSON.parse(storedValues);
-            return fromJson(obj);
-          }catch(e){
-            return storedValues;
-          }
-        }
-      }
-      return null;
-    };
-
-    var getStorageType = function() {
-      return storageType;
-    };
-
-
-    return {
-      isSupported: browserSupportsLocalStorage,
-      getStorageType: getStorageType,
-      set: addToLocalStorage,
-      get: getFromLocalStorage,
-      deriveKey: deriveQualifiedKey,
-      cookie: {
-        isSupported: browserSupportsCookies,
-        set: addToCookies,
-        get: getFromCookies
-      }
-    };
-  };
-
-})( root, window.angular );
-/*
- *  angular-applicationinsights
- *	An angularJS module for using Microsoft Application Insights
- *  https://github.com/khaines/angular-applicationinsights
- */
-
-
-
-(function (angular, errorStackParser, localStorage) {
-/*jshint globalstrict:true*/
-'use strict';
-
-	
-	var _version='angular:0.2.6';
-	var _analyticsServiceUrl = 'https://dc.services.visualstudio.com/v2/track';
-
-	var isDefined = angular.isDefined,
-  		isUndefined = angular.isUndefined,
-  		isNumber = function(n){ return !isNaN(parseFloat(n)) && isFinite(n);}, // angular's version only matches the type.
-  		isObject = angular.isObject,
-  		isArray = angular.isArray,
-  		isString = angular.isString,
-  		extend = angular.extend,
-  		toJson = angular.toJson,
-  		fromJson = angular.fromJson,
-  		forEach = angular.forEach,
-  		noop = angular.noop;
-
-  	var	isNullOrUndefined = function(val) {
-    	return isUndefined(val) || val === null; 
-	};
-
-	var _errorOnHttpCall = false;
-
-
-	var generateGUID = function(){
+    Tools.generateGuid = function () {
         var value = [];
         var digits = "0123456789abcdef";
         for (var i = 0; i < 36; i++) {
@@ -570,496 +26,937 @@ function isStringNumber(num) {
         }
         value[8] = value[13] = value[18] = value[23] = "-";
         value[14] = "4";
-        value[19] = digits.substr((value[19] & 0x3) | 0x8, 1);  
+        value[19] = digits.substr((value[19] & 0x3) | 0x8, 1);
         return value.join("");
-	};
-
-
-	// $log interceptor .. will send log data to application insights, once app insights is 
-	// registered. $provide is only available in the config phase, so we need to setup
-	// the decorator before app insights is instantiated.
-	function LogInterceptor($provide){
-		// original functions
-		var debugFn,infoFn,warnFn,errorFn,logFn;
-
-		// function to invoke ... initialized to noop
-		var interceptFunction = noop;
-
-
-		this.setInterceptFunction = function(func){
-			interceptFunction = func;
-		};
-
-		this.getPrivateLoggingObject = function(){
-			return {
-				debug: isNullOrUndefined(debugFn) ? noop : debugFn,
-				info: isNullOrUndefined(infoFn) ? noop : infoFn,
-				warn: isNullOrUndefined(warnFn) ? noop : warnFn,
-				error: isNullOrUndefined(errorFn) ? noop : errorFn,
-				log: isNullOrUndefined(logFn) ? noop : logFn
-			};
-		};
-
-		var delegator = function(orignalFn, level){
-			return function( ){
-				var args    = [].slice.call(arguments);
-                  // track the call
-                  interceptFunction(args[0],level);
-                  // Call the original 
-                  orignalFn.apply(null, args);
-			};
-		};
-
-		$provide.decorator( '$log', [ "$delegate", function( $delegate )
-        {
-                debugFn = $delegate.debug;
- 				infoFn = $delegate.info;
- 				warnFn = $delegate.warn;
- 				errorFn = $delegate.error;
- 				logFn = $delegate.log;
-
-                $delegate.debug = delegator(debugFn, 'debug');
-                $delegate.info = delegator(infoFn, 'info');
-                $delegate.warn = delegator(warnFn, 'warn');
-                $delegate.error = delegator(errorFn,'error');
-                $delegate.log = delegator(logFn,'log');
- 
+    };
+    return Tools;
+})();
+/// <reference path="./Tools.ts" />
+/*
+* Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
+*/
+var AppInsightsStorage = (function () {
+    function AppInsightsStorage(settings) {
+        var _this = this;
+        this._config = Tools.extend(AppInsightsStorage.defaultConfig, settings);
+        this._self = this._config;
+        this._prefix = this._config.prefix;
+        this._cookie = this._config.cookie;
+        this._notify = this._config.notify;
+        this._storageType = this._config.storageType;
+        this._$rootScope = this._config.rootScope;
+        this._$window = this._config.window;
+        this._$document = this._config.document;
+        this._$parse = this._config.parse;
+        // When Angular's $document is not available
+        if (!this._$document) {
+            this._$document = document;
+        }
+        else if (this._$document[0]) {
+            this._$document = this._$document[0];
+        }
+        // If there is a prefix set in the config lets use that with an appended period for readability
+        if (this._prefix.substr(-1) !== ".") {
+            this._prefix = !!this._prefix ? this._prefix + "." : "";
+        }
+        this._deriveQualifiedKey = function (key) {
+            return _this._prefix + key;
+        };
+    }
+    // Test if string is only contains numbers
+    // e.g '1' => true, "'1'" => true
+    AppInsightsStorage.prototype.isStringNumber = function (num) {
+        return /^-?\d+\.?\d*$/.test(num.replace(/["']/g, ""));
+    };
+    AppInsightsStorage.prototype.browserSupportsLocalStorage = function () {
+        try {
+            var supported = (this._storageType in this._$window && this._$window[this._storageType] !== null);
+            // When Safari (OS X or iOS) is in private browsing mode, it appears as though localStorage
+            // is available, but trying to call .setItem throws an exception.
+            //
+            // "QUOTA_EXCEEDED_ERR: DOM Exception 22: An attempt was made to add something to storage
+            // that exceeded the quota."
+            var key = this._deriveQualifiedKey("__" + Math.round(Math.random() * 1e7));
+            if (supported) {
+                this._webStorage = this._$window[this._storageType];
+                this._webStorage.setItem(key, "");
+                this._webStorage.removeItem(key);
+            }
+            return supported;
+        }
+        catch (e) {
+            this._storageType = "cookie";
+            this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.error", e.message);
+            return false;
+        }
+    };
+    // Checks the browser to see if cookies are supported
+    AppInsightsStorage.prototype.browserSupportsCookies = function () {
+        try {
+            return this._$window.navigator.cookieEnabled ||
+                ("cookie" in this._$document && (this._$document.cookie.length > 0 ||
+                    (this._$document.cookie = "test").indexOf.call(this._$document.cookie, "test") > -1));
+        }
+        catch (e) {
+            this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.error", e.message);
+            return false;
+        }
+    };
+    // Directly adds a value to cookies
+    // Typically used as a fallback is local storage is not available in the browser
+    // Example use: localStorageService.cookie.add('library','angular');
+    AppInsightsStorage.prototype.addToCookies = function (key, value) {
+        if (Tools.isUndefined(value)) {
+            return false;
+        }
+        else if (Tools.isArray(value) || Tools.isObject(value)) {
+            value = Tools.toJson(value);
+        }
+        if (!this.browserSupportsCookies) {
+            this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.error", "COOKIES_NOT_SUPPORTED");
+            return false;
+        }
+        try {
+            var expiry = "", expiryDate = new Date(), cookieDomain = "";
+            if (value === null) {
+                // Mark that the cookie has expired one day ago
+                expiryDate.setTime(expiryDate.getTime() + (-1 * 24 * 60 * 60 * 1000));
+                expiry = "; expires=" + expiryDate.toUTCString();
+                value = "";
+            }
+            else if (this._cookie.expiry !== 0) {
+                expiryDate.setTime(expiryDate.getTime() + (this._cookie.expiry * 24 * 60 * 60 * 1000));
+                expiry = "; expires=" + expiryDate.toUTCString();
+            }
+            if (!!key) {
+                var cookiePath = "; path=" + this._cookie.path;
+                if (this._cookie.domain) {
+                    cookieDomain = "; domain=" + this._cookie.domain;
+                }
+                this._$document.cookie = this._deriveQualifiedKey(key) + "=" + encodeURIComponent(value) + expiry + cookiePath + cookieDomain;
+            }
+        }
+        catch (e) {
+            this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.error", e.message);
+            return false;
+        }
+        return true;
+    };
+    // Directly get a value from a cookie
+    // Example use: localStorageService.cookie.get('library'); // returns 'angular'
+    AppInsightsStorage.prototype.getFromCookies = function (key) {
+        if (!this.browserSupportsCookies) {
+            this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.error", "COOKIES_NOT_SUPPORTED");
+            return false;
+        }
+        var cookies = this._$document.cookie && this._$document.cookie.split(";") || [];
+        for (var i = 0; i < cookies.length; i++) {
+            var thisCookie = cookies[i];
+            while (thisCookie.charAt(0) === " ") {
+                thisCookie = thisCookie.substring(1, thisCookie.length);
+            }
+            if (thisCookie.indexOf(this._deriveQualifiedKey(key) + "=") === 0) {
+                var storedValues = decodeURIComponent(thisCookie.substring(this._prefix.length + key.length + 1, thisCookie.length));
+                try {
+                    var obj = JSON.parse(storedValues);
+                    return Tools.fromJson(obj);
+                }
+                catch (e) {
+                    return storedValues;
+                }
+            }
+        }
+        return null;
+    };
+    // Directly adds a value to local storage
+    // If local storage is not available in the browser use cookies
+    // Example use: localStorageService.add('library','angular');
+    AppInsightsStorage.prototype.addToLocalStorage = function (key, value) {
+        // Let's convert undefined values to null to get the value consistent
+        if (Tools.isUndefined(value)) {
+            value = null;
+        }
+        else if (Tools.isObject(value) || Tools.isArray(value) || Tools.isNumber(+value || value)) {
+            value = Tools.toJson(value);
+        }
+        // If this browser does not support local storage use cookies
+        if (!this.browserSupportsLocalStorage() || this._self.storageType === "cookie") {
+            if (!this.browserSupportsLocalStorage()) {
+                this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.warning", "LOCAL_STORAGE_NOT_SUPPORTED");
+            }
+            if (this._notify.setItem) {
+                this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.setitem", { key: key, newvalue: value, storageType: "cookie" });
+            }
+            return this.addToCookies(key, value);
+        }
+        try {
+            if (Tools.isObject(value) || Tools.isArray(value)) {
+                value = Tools.toJson(value);
+            }
+            if (this._webStorage) {
+                this._webStorage.setItem(this._deriveQualifiedKey(key), value);
+            }
+            if (this._notify.setItem) {
+                this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.setitem", { key: key, newvalue: value, storageType: this._self.storageType });
+            }
+        }
+        catch (e) {
+            this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.error", e.message);
+            return this.addToCookies(key, value);
+        }
+        return true;
+    };
+    // Directly get a value from local storage
+    // Example use: localStorageService.get('library'); // returns 'angular'
+    AppInsightsStorage.prototype.getFromLocalStorage = function (key) {
+        if (!this.browserSupportsLocalStorage() || this._self.storageType === "cookie") {
+            if (!this.browserSupportsLocalStorage()) {
+                this._$rootScope.$broadcast("AngularAppInsights.Storage.notification.warning", "LOCAL_STORAGE_NOT_SUPPORTED");
+            }
+            return this.getFromCookies(key);
+        }
+        var item = this._webStorage ? this._webStorage.getItem(this._deriveQualifiedKey(key)) : null;
+        // angular.toJson will convert null to 'null', so a proper conversion is needed
+        // FIXME not a perfect solution, since a valid 'null' string can't be stored
+        if (!item || item === "null") {
+            return null;
+        }
+        if (item.charAt(0) === "{" || item.charAt(0) === "[" || this.isStringNumber(item)) {
+            return Tools.fromJson(item);
+        }
+        return item;
+    };
+    AppInsightsStorage.prototype.getStorageType = function () {
+        return this._storageType;
+    };
+    AppInsightsStorage.prototype.isSupported = function () {
+        return this.browserSupportsLocalStorage();
+    };
+    AppInsightsStorage.prototype.set = function (key, value) {
+        return this.addToLocalStorage(key, value);
+    };
+    AppInsightsStorage.prototype.get = function (key) {
+        return this.getFromLocalStorage(key);
+    };
+    AppInsightsStorage.prototype.deriveKey = function (key) {
+        return this._deriveQualifiedKey(key);
+    };
+    AppInsightsStorage.prototype.isCookiesSupported = function () {
+        return this.browserSupportsCookies();
+    };
+    AppInsightsStorage.prototype.setCookie = function (key, value) {
+        this.addToCookies(key, value);
+    };
+    AppInsightsStorage.prototype.getCookie = function (key) {
+        return this.getFromCookies(key);
+    };
+    AppInsightsStorage.defaultConfig = {
+        // You should set a prefix to avoid overwriting any local storage variables from the rest of your app
+        // e.g. localStorageServiceProvider.setPrefix('youAppName');
+        // With provider you can use config as this:
+        // myApp.config(function (localStorageServiceProvider) {
+        //    localStorageServiceProvider.prefix = 'yourAppName';
+        // });
+        prefix: "ls",
+        // You could change web storage type localstorage or sessionStorage
+        storageType: "localStorage",
+        // Cookie options (usually in case of fallback)
+        // expiry = Number of days before cookies expire // 0 = Does not expire
+        // path = The web path the cookie represents
+        cookie: {
+            expiry: 30,
+            path: "/"
+        },
+        // Send signals for each of the following actions?
+        notify: {
+            setItem: true,
+            removeItem: false
+        }
+    };
+    return AppInsightsStorage;
+})();
+/// <reference path="typings/angularjs/angular.d.ts" />
+/// <reference path="./Tools.ts" />
+var TelemetryRequest = (function () {
+    function TelemetryRequest() {
+    }
+    return TelemetryRequest;
+})();
+var TelemetryRequestHeaders = (function () {
+    function TelemetryRequestHeaders() {
+    }
+    return TelemetryRequestHeaders;
+})();
+/// <reference path="./Tools.ts" />
+/*
+* Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
+*/
+var StackFrame = (function () {
+    function StackFrame(functionName, args, fileName, lineNumber, columnNumber, level) {
+        if (!Tools.isUndefined(functionName)) {
+            this.setFunctionName(functionName);
+        }
+        if (!Tools.isUndefined(columnNumber)) {
+            this.setColumnNumber(columnNumber);
+        }
+        if (!Tools.isUndefined(args)) {
+            this.setArgs(args);
+        }
+        if (!Tools.isUndefined(fileName)) {
+            this.setFileName(fileName);
+        }
+        if (!Tools.isUndefined(lineNumber)) {
+            this.setLineNumber(lineNumber);
+        }
+        if (!Tools.isUndefined(level)) {
+            this.setLevelNumber(level);
+        }
+    }
+    //// NOTE: Property name may be misleading as it includes the path,
+    //// but it somewhat mirrors V8's JavaScriptStackTraceApi
+    //// https://code.google.com/p/v8/wiki/JavaScriptStackTraceApi and Gecko's
+    //// http://mxr.mozilla.org/mozilla-central/source/xpcom/base/nsIException.idl#14
+    //private getFunctionName() {
+    //    return this.method;
+    //}
+    StackFrame.prototype.setFunctionName = function (v) {
+        this.method = String(v);
+    };
+    //private getArgs() {
+    //    return this.args;
+    //}
+    StackFrame.prototype.setArgs = function (v) {
+        if (Object.prototype.toString.call(v) !== '[object Array]') {
+            throw new TypeError('Args must be an Array');
+        }
+        this.args = v;
+    };
+    //private getFileName() {
+    //    return this.fileName;
+    //}
+    StackFrame.prototype.setFileName = function (v) {
+        this.fileName = String(v);
+    };
+    //private getLineNumber() {
+    //    return this.lineNumber;
+    //}
+    StackFrame.prototype.setLineNumber = function (v) {
+        if (!Tools.isNumber(v)) {
+            /* test-code */
+            console.log('LineNumber is ' + v);
+            /* end-test-code */
+            this.lineNumber = undefined;
+            return;
+        }
+        this.lineNumber = Number(v);
+    };
+    //private getColumnNumber() {
+    //    return this.columnNumber;
+    //}
+    StackFrame.prototype.setColumnNumber = function (v) {
+        if (!Tools.isNumber(v)) {
+            this.columnNumber = undefined;
+            return;
+        }
+        this.columnNumber = Number(v);
+    };
+    StackFrame.prototype.setLevelNumber = function (v) {
+        if (!Tools.isNumber(v)) {
+            throw new TypeError('Level Number must be a Number');
+        }
+        this.level = Number(v);
+    };
+    StackFrame.prototype.toString = function () {
+        var functionName = this.method || '{anonymous}';
+        var args = '(' + (this.args || []).join(',') + ')';
+        var fileName = this.fileName ? ('@' + this.fileName) : '';
+        var lineNumber = Tools.isNumber(this.lineNumber) ? (':' + this.lineNumber) : '';
+        var columnNumber = Tools.isNumber(this.columnNumber) ? (':' + this.columnNumber) : '';
+        return functionName + args + fileName + lineNumber + columnNumber;
+    };
+    return StackFrame;
+})();
+/// <reference path="./Tools.ts" />
+/// <reference path="./StackFrame.ts" />
+var StackParser = (function () {
+    function StackParser() {
+    }
+    /**
+        * Given an Error object, extract the most information from it.
+        * @param error {Error}
+        * @return Array[StackFrame]
+        */
+    StackParser.parse = function (error) {
+        if (typeof error.stacktrace !== "undefined" || typeof error["opera#sourceloc"] !== "undefined") {
+            return StackParser.parseOpera(error);
+        }
+        else if (error.stack && error.stack.match(StackParser.chromeIeStackRegexp)) {
+            return StackParser.parseChromeOrInternetExplorer(error);
+        }
+        else if (error.stack && error.stack.match(StackParser.firefoxSafariStackRegexp)) {
+            return StackParser.parseFireFoxOrSafari(error);
+        }
+        else {
+            return null;
+        }
+    };
+    /**
+        * Separate line and column numbers from a URL-like string.
+        * @param urlLike String
+        * @return Array[String]
+        */
+    StackParser.extractLocation = function (urlLike) {
+        // Guard against strings like "(native)"
+        if (urlLike.indexOf(":") === -1) {
+            return [];
+        }
+        var locationParts = urlLike.split(":");
+        var lastNumber = locationParts.pop();
+        var possibleNumber = locationParts[locationParts.length - 1];
+        if (!isNaN(parseFloat(possibleNumber)) && isFinite(possibleNumber)) {
+            var lineNumber = locationParts.pop();
+            return [locationParts.join(":"), lineNumber, lastNumber];
+        }
+        else {
+            return [locationParts.join(":"), lastNumber, undefined];
+        }
+    };
+    StackParser.parseChromeOrInternetExplorer = function (error) {
+        var _this = this;
+        var level = 0;
+        return error.stack.split("\n").slice(1).map(function (line) {
+            var tokens = line.replace(/^\s+/, "").split(/\s+/).slice(1);
+            var locationParts = tokens[0] !== undefined ? _this.extractLocation(tokens.pop().replace(/[\(\)\s]/g, "")) : ["unknown", "unknown", "unknown"];
+            var functionName = (!tokens[0] || tokens[0] === "Anonymous") ? "unknown" : tokens[0];
+            return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
+        }, this);
+    };
+    StackParser.parseFireFoxOrSafari = function (error) {
+        var _this = this;
+        var level = 0;
+        return error.stack.split("\n").filter(function (line) {
+            return !!line.match(StackParser.firefoxSafariStackRegexp);
+        }, this).map(function (line) {
+            var tokens = line.split("@");
+            var locationParts = _this.extractLocation(tokens.pop());
+            var functionName = tokens.shift() || "unknown";
+            return new StackFrame(functionName, undefined, locationParts[0], locationParts[1], locationParts[2], level++);
+        }, this);
+    };
+    StackParser.parseOpera = function (e) {
+        if (!e.stacktrace || (e.message.indexOf("\n") > -1 &&
+            e.message.split("\n").length > e.stacktrace.split("\n").length)) {
+            return this.parseOpera9(e);
+        }
+        else if (!e.stack) {
+            return this.parseOpera10(e);
+        }
+        else {
+            return this.parseOpera11(e);
+        }
+    };
+    StackParser.parseOpera9 = function (e) {
+        var lineRe = /Line (\d+).*script (?:in )?(\S+)/i;
+        var lines = e.message.split("\n");
+        var result = [];
+        for (var i = 2, len = lines.length; i < len; i += 2) {
+            var match = lineRe.exec(lines[i]);
+            if (match) {
+                var level = 0;
+                result.push(new StackFrame(undefined, undefined, match[2], match[1], undefined, level++));
+            }
+        }
+        return result;
+    };
+    StackParser.parseOpera10 = function (e) {
+        var lineRe = /Line (\d+).*script (?:in )?(\S+)(?:: In function (\S+))?$/i;
+        var lines = e.stacktrace.split("\n");
+        var result = [];
+        for (var i = 0, len = lines.length; i < len; i += 2) {
+            var match = lineRe.exec(lines[i]);
+            if (match) {
+                var level = 0;
+                result.push(new StackFrame(match[3] || undefined, undefined, match[2], match[1], undefined, level++));
+            }
+        }
+        return result;
+    };
+    // Opera 10.65+ Error.stack very similar to FF/Safari
+    StackParser.parseOpera11 = function (error) {
+        var level = 0;
+        return error.stack.split("\n").filter(function (line) {
+            return !!line.match(StackParser.firefoxSafariStackRegexp) &&
+                !line.match(/^Error created at/);
+        }, this).map(function (line) {
+            var tokens = line.split("@");
+            var locationParts = StackParser.extractLocation(tokens.pop());
+            var functionCall = (tokens.shift() || "");
+            var functionName = functionCall
+                .replace(/<anonymous function(: (\w+))?>/, "$2")
+                .replace(/\([^\)]*\)/g, "") || undefined;
+            var argsRaw;
+            if (functionCall.match(/\(([^\)]*)\)/)) {
+                argsRaw = functionCall.replace(/^[^\(]+\(([^\)]*)\)$/, "$1");
+            }
+            var args = (argsRaw === undefined || argsRaw === "[arguments not available]") ? undefined : argsRaw ? argsRaw.split(",") : "";
+            return new StackFrame(functionName, args, locationParts[0], locationParts[1], locationParts[2], level++);
+        }, this);
+    };
+    /*
+        * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
+        */
+    StackParser.firefoxSafariStackRegexp = /\S+\:\d+/;
+    StackParser.chromeIeStackRegexp = /\s+at /;
+    return StackParser;
+})();
+///<reference path="./Tools.ts" />
+// $log interceptor .. will send log data to application insights, once app insights is 
+// registered. $provide is only available in the config phase, so we need to setup
+// the decorator before app insights is instantiated.
+var LogInterceptor = (function () {
+    function LogInterceptor($provide, angular) {
+        var _this = this;
+        this._angular = angular;
+        this._noop = this._angular.noop;
+        // function to invoke ... initialized to noop
+        LogInterceptor.interceptFuntion = this._noop;
+        $provide.decorator('$log', [
+            "$delegate", function ($delegate) {
+                _this._debugFn = $delegate.debug;
+                _this._infoFn = $delegate.info;
+                _this._warnFn = $delegate.warn;
+                _this._errorFn = $delegate.error;
+                _this._logFn = $delegate.log;
+                $delegate.debug = _this.delegator(_this._debugFn, 'debug');
+                $delegate.info = _this.delegator(_this._infoFn, 'info');
+                $delegate.warn = _this.delegator(_this._warnFn, 'warn');
+                $delegate.error = _this.delegator(_this._errorFn, 'error');
+                $delegate.log = _this.delegator(_this._logFn, 'log');
                 return $delegate;
-        }]);
+            }
+        ]);
+    }
+    LogInterceptor.prototype.setInterceptFunction = function (func) {
+        LogInterceptor.interceptFuntion = func;
+    };
+    LogInterceptor.prototype.getPrivateLoggingObject = function () {
+        return {
+            debug: Tools.isNullOrUndefined(this._debugFn) ? Tools.noop : this._debugFn,
+            info: Tools.isNullOrUndefined(this._infoFn) ? Tools.noop : this._infoFn,
+            warn: Tools.isNullOrUndefined(this._warnFn) ? Tools.noop : this._warnFn,
+            error: Tools.isNullOrUndefined(this._errorFn) ? Tools.noop : this._errorFn,
+            log: Tools.isNullOrUndefined(this._logFn) ? Tools.noop : this._logFn
+        };
+    };
+    LogInterceptor.prototype.delegator = function (orignalFn, level) {
+        return function () {
+            var args = [].slice.call(arguments);
+            // track the call
+            LogInterceptor.interceptFuntion(args[0], level);
+            // Call the original 
+            orignalFn.apply(null, args);
+        };
+    };
+    return LogInterceptor;
+})();
+/// <reference path="./Tools.ts" />
+// Exception interceptor
+// Intercepts calls to the $exceptionHandler and sends them to Application insights as exception telemetry.
+var ExceptionInterceptor = (function () {
+    function ExceptionInterceptor($provide) {
+        var _this = this;
+        ExceptionInterceptor.errorOnHttpCall = false;
+        this._interceptFunction = Tools.noop;
+        $provide.decorator('$exceptionHandler', [
+            '$delegate', function ($delegate) {
+                _this._origExceptionHandler = $delegate;
+                return function (exception, cause) {
+                    // track the call 
+                    // ... only if there is no active issues/errors sending data over http, in order to prevent an infinite loop.
+                    if (!ExceptionInterceptor.errorOnHttpCall) {
+                        _this._interceptFunction(exception, cause);
+                    }
+                    // Call the original 
+                    _this._origExceptionHandler(exception, cause);
+                };
+            }
+        ]);
+    }
+    ExceptionInterceptor.prototype.setInterceptFunction = function (func) {
+        this._interceptFunction = func;
+    };
+    ExceptionInterceptor.prototype.getPrivateExceptionHanlder = function () {
+        return Tools.isNullOrUndefined(this._origExceptionHandler) ? Tools.noop : this._origExceptionHandler;
+    };
+    return ExceptionInterceptor;
+})();
+var Options = (function () {
+    function Options() {
+        this.applicationName = '';
+        this.autoPageViewTracking = true;
+        this.autoLogTracking = true;
+        this.autoExceptionTracking = true;
+        this.sessionInactivityTimeout = 1800000;
+        this.instrumentationKey = '';
+    }
+    return Options;
+})();
+var HttpRequest = (function () {
+    function HttpRequest() {
+    }
+    HttpRequest.prototype.send = function (options, onSuccessCallback, onErrorCallback) {
+        var request = new XMLHttpRequest();
+        request.onerror = function (e) {
+            onErrorCallback(0);
+        };
+        request.onload = function (e) {
+            if (request.status == 200) {
+                // success!
+                onSuccessCallback();
+            }
+            else {
+                onErrorCallback(request.status);
+            }
+        };
+        request.open(options.method, options.url, true);
+        for (var header in options.headers) {
+            request.setRequestHeader(header, options.headers[header]);
+        }
+        request.send(JSON.stringify(options.data));
+    };
+    return HttpRequest;
+})();
+var HttpRequestOptions = (function () {
+    function HttpRequestOptions() {
+    }
+    return HttpRequestOptions;
+})();
+/// <reference path="typings/angularjs/angular.d.ts" />
+/// <reference path="./Tools.ts" />
+/// <reference path="./Storage.ts" />
+/// <reference path="./TelemetryRequest.ts" />
+/// <reference path="./StackParser.ts" />
+/// <reference path="./LogInterceptor.ts" />
+/// <reference path="./ExceptionInterceptor.ts" />
+/// <reference path="./Options.ts" />
+/// <reference path="./HTTPRequest.ts" />
+var ApplicationInsights = (function () {
+    function ApplicationInsights(localStorage, $locale, $window, $location, logInterceptor, exceptionInterceptor, httpRequestFactory, options) {
+        var _this = this;
+        this._sessionKey = "$$appInsights__session";
+        this._version = "angular:0.2.6";
+        this._analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
+        this._contentType = "application/json";
+        this._localStorage = localStorage;
+        this._locale = $locale;
+        this._window = $window;
+        this._location = $location;
+        this._httpRequestFactory = httpRequestFactory;
+        this.options = options;
+        this._log = logInterceptor.getPrivateLoggingObject();
+        this._exceptionHandler = exceptionInterceptor.getPrivateExceptionHanlder();
+        this._logInterceptor = logInterceptor;
+        this._exceptionInterceptor = exceptionInterceptor;
+        // set traceTraceMessage as the intercept method of the log decorator
+        if (this.options.autoLogTracking) {
+            this._logInterceptor.setInterceptFunction(function (message, level, properties) { return _this.trackTraceMessage(message, level, properties); });
+        }
+        if (this.options.autoExceptionTracking) {
+            this._exceptionInterceptor.setInterceptFunction(function (exception, cause) { return _this.trackException(exception, cause); });
+        }
+    }
+    ApplicationInsights.prototype.getUniqueId = function () {
+        var uuidKey = "$$appInsights__uuid";
+        // see if there is already an id stored locally, if not generate a new value
+        var uuid = this._localStorage.get(uuidKey);
+        if (Tools.isNullOrUndefined(uuid)) {
+            uuid = Tools.generateGuid();
+            this._localStorage.set(uuidKey, uuid);
+        }
+        return uuid;
+    };
+    ApplicationInsights.prototype.makeNewSession = function () {
+        // no existing session data
+        var sessionData = {
+            id: Tools.generateGuid(),
+            accessed: new Date().getTime()
+        };
+        this._localStorage.set(this._sessionKey, sessionData);
+        return sessionData;
+    };
+    ApplicationInsights.prototype.getSessionId = function () {
+        var sessionData = this._localStorage.get(this._sessionKey);
+        if (Tools.isNullOrUndefined(sessionData)) {
+            // no existing session data
+            sessionData = this.makeNewSession();
+        }
+        else {
+            var lastAccessed = Tools.isNullOrUndefined(sessionData.accessed) ? 0 : sessionData.accessed;
+            var now = new Date().getTime();
+            if ((now - lastAccessed > this.options.sessionInactivityTimeout)) {
+                // this session is expired, make a new one
+                sessionData = this.makeNewSession();
+            }
+            else {
+                // valid session, update the last access timestamp
+                sessionData.accessed = now;
+                this._localStorage.set(this._sessionKey, sessionData);
+            }
+        }
+        return sessionData.id;
+    };
+    ApplicationInsights.prototype.validateMeasurements = function (measurements) {
+        if (Tools.isNullOrUndefined(measurements)) {
+            return null;
+        }
+        if (!Tools.isObject(measurements)) {
+            this._log.warn("The value of the measurements parameter must be an object consisting of a string/number pairs.");
+            return null;
+        }
+        var validatedMeasurements = {};
+        for (var metricName in measurements) {
+            if (Tools.isNumber(measurements[metricName])) {
+                validatedMeasurements[metricName] = measurements[metricName];
+            }
+            else {
+                this._log.warn("The value of measurement " + metricName + " is not a number.");
+            }
+        }
+        return validatedMeasurements;
+    };
+    ApplicationInsights.prototype.validateProperties = function (properties) {
+        if (Tools.isNullOrUndefined(properties)) {
+            return null;
+        }
+        if (!Tools.isObject(properties)) {
+            this._log.warn("The value of the properties parameter must be an object consisting of a string/string pairs.");
+            return null;
+        }
+        var validateProperties = {};
+        for (var propName in properties) {
+            var currentProp = properties[propName];
+            if (!Tools.isNullOrUndefined(currentProp) && !Tools.isObject(currentProp) && !Tools.isArray(currentProp)) {
+                validateProperties[propName] = currentProp;
+            }
+            else {
+                this._log.warn("The value of property " + propName + " could not be determined to be a string or number.");
+            }
+        }
+        return validateProperties;
+    };
+    ApplicationInsights.prototype.validateSeverityLevel = function (level) {
+        // https://github.com/Microsoft/ApplicationInsights-JS/blob/7bbf8b7a3b4e3610cefb31e9d61765a2897dcb3b/JavaScript/JavaScriptSDK/Contracts/Generated/SeverityLevel.ts
+        /*
+         export enum SeverityLevel
+         {
+            Verbose = 0,
+            Information = 1,
+            Warning = 2,
+            Error = 3,
+            Critical = 4,
+         }
 
-	}
-
-	// Exception interceptor
-	// Intercepts calls to the $exceptionHandler and sends them to Application insights as exception telemetry.
-	function ExceptionInterceptor($provide){
-
-		var origExceptionHandler;
-
-		var interceptFunction = noop;
-
-		this.setInterceptFunction = function(func){
-			interceptFunction = func;
-		};
-
-		this.getPrivateExceptionHanlder = function(){
-			return isNullOrUndefined(origExceptionHandler) ? noop: origExceptionHandler;
-		};
-
-		$provide.decorator('$exceptionHandler',['$delegate',function($delegate){
-				origExceptionHandler = $delegate;
-				return function(exception, cause){
-				  // track the call 
-				  // ... only if there is no active issues/errors sending data over http, in order to prevent an infinite loop.
-				  if(!_errorOnHttpCall){
-				    interceptFunction(exception,cause);
-				  }
-                  // Call the original 
-                  origExceptionHandler(exception,cause);		
-				};
-		}]);
-
-	}
-
-	var _logInterceptor, _exceptionInterceptor;
-
-
-	// Application Insights Module
-	var angularAppInsights = angular.module('ApplicationInsightsModule', []);
-
-	// setup some features that can only be done during the configure pass
-	angularAppInsights.config(['$provide',function ($provide) {
-    	 _logInterceptor = new LogInterceptor($provide);
-    	 _exceptionInterceptor = new ExceptionInterceptor($provide);
-	}]);
-
-	angularAppInsights.provider('applicationInsightsService', function() {
-		// configuration properties for the provider
-		var _instrumentationKey= '';
-		var _options = {
-			applicationName : '',
-			autoPageViewTracking: true,
-			autoLogTracking: true,
-			autoExceptionTracking: true,
-			sessionInactivityTimeout: 1800000
-		};
-		
-
-		this.configure = function(instrumentationKey, applicationName, enableAutoPageViewTracking){
-			if(isString(applicationName)){
-				_instrumentationKey = instrumentationKey;
-				_options.applicationName = applicationName;
-				_options.autoPageViewTracking = isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
-			}
-			else
-			{
-				extend(_options, applicationName);
-				_instrumentationKey = instrumentationKey;
-			}
-		};
-
-
-		// invoked when the provider is run
-		this.$get = ['$http', '$locale','$window','$location','$rootScope','$parse','$document', function($http, $locale, $window, $location,$rootScope,$parse,$document){
-
-				// get a reference of storage
-				var storage = localStorage({
-											window: $window,
-											rootScope: $rootScope,
-											document: $document,
-											parse: $parse
-											});
-
-				return new ApplicationInsights(storage, $http, $locale, $window, $location, errorStackParser);
-		}];
-
-
-		// Application Insights implementation
-		function ApplicationInsights(localStorage, $http, $locale, $window, $location, exceptionStackParser){
-			
-			var _log = _logInterceptor.getPrivateLoggingObject(); // so we can log output without causing a recursive loop.
-			var _exceptionHandler = _exceptionInterceptor.getPrivateExceptionHanlder();
-			var _contentType = 'application/json';
-			var _namespace = 'Microsoft.ApplicationInsights.';
-			var _names = {
-  				pageViews: _namespace+'Pageview',
-  				traceMessage: _namespace +'Message',
-  				events: _namespace +'Event',
-  				metrics: _namespace +'Metric',
-  				exception: _namespace + 'Exception'
-  			};
-  			var _types ={
-  				pageViews: _namespace+'PageviewData',
-  				traceMessage: _namespace+'MessageData',
-  				events: _namespace +'EventData',
-  				metrics: _namespace +'MetricData',
-  				exception: _namespace +'ExceptionData'
-  			};
-			var _commonProperties;
-
-			var getUUID = function(){
-				var uuidKey = '$$appInsights__uuid';
-				// see if there is already an id stored locally, if not generate a new value
-				var uuid =  localStorage.get(uuidKey);
-				if(isNullOrUndefined(uuid)){
-					uuid = generateGUID();
-					localStorage.set(uuidKey, uuid);
-				}
-				return uuid;
-			};
-
-			var sessionKey = '$$appInsights__session';
-			var makeNewSession = function(){
-				// no existing session data
-					var sessionData = {
-						id:generateGUID(),
-						accessed: new Date().getTime()
-					};
-					localStorage.set(sessionKey,sessionData);
-					return sessionData;
-			};
-
-			var getSessionID = function(){
-			
-				var sessionData = localStorage.get(sessionKey);
-			
-				if(isNullOrUndefined(sessionData)){
-		
-					// no existing session data
-					sessionData = makeNewSession();
-				}
-				else
-				{
-			
-		
-					var lastAccessed = isNullOrUndefined(sessionData.accessed) ? 0 : sessionData.accessed;
-					var now = new Date().getTime();
-					if(( now - lastAccessed > _options.sessionInactivityTimeout))
-					{
-
-						// this session is expired, make a new one
-						sessionData = makeNewSession();
-					}
-					else
-					{
-
-						// valid session, update the last access timestamp
-						sessionData.accessed = now;
-						localStorage.set(sessionKey, sessionData);
-					}
-				}
-
-				return sessionData.id;
-			};
-
-			var validateMeasurements = function(measurements)
-			{
-				if(isNullOrUndefined(measurements)){
-					return null;
-				}
-
-				if(!isObject(measurements)){
-					_log.warn('The value of the measurements parameter must be an object consisting of a string/number pairs.');
-					return null;
-				}
-
-				var validatedMeasurements={};
-				for(var metricName in measurements){
-					if( isNumber(measurements[metricName])){
-						validatedMeasurements[metricName] = measurements[metricName];
-					}
-					else
-					{
-						_log.warn('The value of measurement '+metricName+' is not a number.');
-					}
-				}
-
-				return validatedMeasurements;
-			};
-
-			var validateProperties = function(properties){
-
-				if(isNullOrUndefined(properties)){
-					return null;
-				}
-				
-				if(!isObject(properties)){
-					_log.warn('The value of the properties parameter must be an object consisting of a string/string pairs.');
-					return null;
-				}
-
-				var validateProperties={};
-				for(var propName in properties){
-					var currentProp = properties[propName];
-					if(!isNullOrUndefined(currentProp) && !isObject(currentProp) && !isArray(currentProp)){
-						validateProperties[propName] = currentProp;
-					}
-					else{
-						_log.warn('The value of property '+propName+' could not be determined to be a string or number.');
-					}
-				}
-				return validateProperties;
-			};
-
-			var validateSeverityLevel = function (level) {
-                // https://github.com/Microsoft/ApplicationInsights-JS/blob/7bbf8b7a3b4e3610cefb31e9d61765a2897dcb3b/JavaScript/JavaScriptSDK/Contracts/Generated/SeverityLevel.ts
-                /*
-                 export enum SeverityLevel
-                 {
-                    Verbose = 0,
-                    Information = 1,
-                    Warning = 2,
-                    Error = 3,
-                    Critical = 4,
-                 }
-
-                 We need to map the angular $log levels to these for app insights
-                 */
-                var levels = [
-                    'debug', // Verbose
-                    'info',  // Information
-                    'warn',  // Warning
-                    'error'  //Error
-                ];
-                var levelEnum = levels.indexOf(level);
-                return levelEnum > -1 ? levelEnum : 0;
-            };
-
-			var sendData = function(data){
-
-				// bug # 24 : create a header object that filters out any default assigned header that will not be accepted by a browser's CORS check
-				var headers = {};
-				for(var header in $http.defaults.headers.common){
-					headers[header] = undefined;
-				}
-
-				for(var postHeader in $http.defaults.headers.post){
-					headers[postHeader] = undefined;
-				}
-
-				headers.Accept = _contentType;
-				headers['Content-Type'] = _contentType;
-
-				var request = {
-					method: 'POST',
-					url:_analyticsServiceUrl,
-					headers: headers,
-					data:data,
-					// bugfix for issue# 18: disable credentials on CORS requests.
-					withCredentials: false 
-				};
-
-				try{
-					$http(request)
-						 .success(function(data, status, headers, config) {
-						 	_errorOnHttpCall = false;
-    						// this callback will be called asynchronously
-    						// when the response is available
-  						})
- 						 .error(function(data, status, headers, config) {
-    						// called asynchronously if an error occurs
-    						// or server returns response with an error status.
-    						_errorOnHttpCall = true;
-  						});
- 				}
- 				catch(e){
- 					// supressing of exceptions on the initial http call in order to prevent infinate loops with the error interceptor.
- 				}
-			};
-
-			var trackPageView = function(pageName, pageUrl, properties, measurements){
-				// TODO: consider possible overloads (no name or url but properties and measurements)
-
-				var data = generateAppInsightsData(_names.pageViews, 
-											_types.pageViews,
-											{
-												ver: 1,
-												url: isNullOrUndefined(pageUrl) ? $location.absUrl() : pageUrl,
-												name: isNullOrUndefined(pageName) ? $location.path() : pageName,
-												properties: validateProperties(properties),
-												measurements: validateMeasurements(measurements) 
-											});
-				sendData(data);
-			};
-
-			var trackEvent = function(eventName, properties, measurements){
-				var data = generateAppInsightsData(_names.events,
-											_types.events,
-											{
-												ver:1,
-												name:eventName,
-												properties: validateProperties(properties),
-												measurements: validateMeasurements(measurements)
-											});
-				sendData(data);
-			};
-
-			var trackTraceMessage = function(message, level, properties){
-				if(isNullOrUndefined(message) || !isString(message)){
-					return;
-				}
-
-				var data = generateAppInsightsData(_names.traceMessage, 
-											_types.traceMessage,
-											{
-												ver: 1,
-												message: message,
-												severityLevel: validateSeverityLevel(level),
-												properties: validateProperties(properties)
-											});
-				sendData(data);
-			};
-
-			var trackMetric = function(name, value, properties){
-				var data = generateAppInsightsData(_names.metrics, 
-												_types.metrics,
-												{
-													ver: 1,
-													metrics: [{name:name,value:value}],
-													properties: validateProperties(properties)
-												});
-				sendData(data);
-			};
-
-			var trackException = function(exception, cause){
-				if(isNullOrUndefined(exception)){
-					return;
-				}
-
-				// parse the stack
-				var parsedStack = exceptionStackParser.parse(exception);
-
-				var data = generateAppInsightsData(_names.exception,
-													_types.exception,
-													{
-														ver:1,
-														handledAt:'Unhandled',
-														exceptions:[{
-																typeName: exception.name,
-																message: exception.message,
-																stack: exception.stack,
-																parsedStack: parsedStack,
-																hasFullStack: !isNullOrUndefined(parsedStack)
-															}]
-													});
-				sendData(data);
-			};
-
-			var generateAppInsightsData = function(payloadName, payloadDataType, payloadData){
-				
-				if (_commonProperties) {
-					payloadData.properties = payloadData.properties || {}; 
-					extend(payloadData.properties, _commonProperties); 
-				} 
-
-				return {
-					name: payloadName,
-					time: new Date().toISOString(),
-					ver: 1,
-					iKey: _instrumentationKey,
-					user: {id: getUUID()},
-					session: {
-						id: getSessionID()
-					},
-					operation: {
-						id: generateGUID()
-					},
-					device: {
-						id: 'browser',
-						locale: $locale.id,
-						resolution: $window.screen.availWidth +'x'+ $window.screen.availHeight
-					},
-					internal: {
-						sdkVersion: _version
-					},
-					data:{
-						type: payloadDataType,
-						item: payloadData
-					}
-				};
-			};
-			
-			var setCommonProperties = function (data) {
-				validateProperties(data);
-				_commonProperties = _commonProperties || {};
-				extend(_commonProperties, data);
-			};
-
-			// set traceTraceMessage as the intercept method of the log decorator
-			if(_options.autoLogTracking){
-				_logInterceptor.setInterceptFunction(trackTraceMessage);
-			}
-			if(_options.autoExceptionTracking){
-				_exceptionInterceptor.setInterceptFunction(trackException);
-			}
-
-			// public api surface
-			return {
-				'trackPageView': trackPageView,
-				'trackTraceMessage': trackTraceMessage,
-				'trackEvent': trackEvent,
-				'trackMetric': trackMetric,
-				'trackException' : trackException,
-				'applicationName': _options.applicationName,
-				'autoPageViewTracking': _options.autoPageViewTracking,
-				'setCommonProperties': setCommonProperties
-			};
-
-		}
-	})
-	// the run block sets up automatic page view tracking
-	.run(['$rootScope', '$location', 'applicationInsightsService', function($rootScope,$location,applicationInsightsService){
-        $rootScope.$on('$locationChangeSuccess', function() {
-           	
-           		if(applicationInsightsService.autoPageViewTracking){
-                	applicationInsightsService.trackPageView(applicationInsightsService.applicationName + $location.path());
- 				}
+         We need to map the angular $log levels to these for app insights
+         */
+        var levels = [
+            "debug",
+            "info",
+            "warn",
+            "error" //Error
+        ];
+        var levelEnum = levels.indexOf(level);
+        return levelEnum > -1 ? levelEnum : 0;
+    };
+    ApplicationInsights.prototype.sendData = function (data) {
+        var request = this._httpRequestFactory();
+        var headers = {};
+        headers["Accept"] = this._contentType; // jshint ignore:line
+        headers["Content-Type"] = this._contentType;
+        var options = {
+            method: "POST",
+            url: this._analyticsServiceUrl,
+            headers: headers,
+            data: data,
+        };
+        try {
+            request.send(options, function () {
+                ExceptionInterceptor.errorOnHttpCall = false;
+                // this callback will be called asynchronously
+                // when the response is available
+            }, function (statusCode) {
+                // called asynchronously if an error occurs
+                // or server returns response with an error status.
+                ExceptionInterceptor.errorOnHttpCall = true;
+            });
+        }
+        catch (e) {
+        }
+    };
+    ApplicationInsights.prototype.trackPageView = function (pageName, pageUrl, properties, measurements) {
+        // TODO: consider possible overloads (no name or url but properties and measurements)
+        var data = this.generateAppInsightsData(ApplicationInsights.names.pageViews, ApplicationInsights.types.pageViews, {
+            ver: 1,
+            url: Tools.isNullOrUndefined(pageUrl) ? this._location.absUrl() : pageUrl,
+            name: Tools.isNullOrUndefined(pageName) ? this._location.path() : pageName,
+            properties: this.validateProperties(properties),
+            measurements: this.validateMeasurements(measurements)
         });
-     }]);
-
-})( root.angular, root.errorStackParser, root.storage );
-
-// Code here will be linted with JSHint.
-/* jshint ignore:start */
-})(window.angular);
-// Code here will be ignored by JSHint.
-/* jshint ignore:end */
+        this.sendData(data);
+    };
+    ApplicationInsights.prototype.trackEvent = function (eventName, properties, measurements) {
+        var data = this.generateAppInsightsData(ApplicationInsights.names.events, ApplicationInsights.types.events, {
+            ver: 1,
+            name: eventName,
+            properties: this.validateProperties(properties),
+            measurements: this.validateMeasurements(measurements)
+        });
+        this.sendData(data);
+    };
+    ApplicationInsights.prototype.trackTraceMessage = function (message, level, properties) {
+        if (Tools.isNullOrUndefined(message) || !Tools.isString(message)) {
+            return;
+        }
+        var data = this.generateAppInsightsData(ApplicationInsights.names.traceMessage, ApplicationInsights.types.traceMessage, {
+            ver: 1,
+            message: message,
+            severityLevel: this.validateSeverityLevel(level),
+            properties: this.validateProperties(properties)
+        });
+        this.sendData(data);
+    };
+    ApplicationInsights.prototype.trackMetric = function (name, value, properties) {
+        var data = this.generateAppInsightsData(ApplicationInsights.names.metrics, ApplicationInsights.types.metrics, {
+            ver: 1,
+            metrics: [{ name: name, value: value }],
+            properties: this.validateProperties(properties)
+        });
+        this.sendData(data);
+    };
+    ApplicationInsights.prototype.trackException = function (exception, cause) {
+        if (Tools.isNullOrUndefined(exception)) {
+            return;
+        }
+        // parse the stack
+        var parsedStack = StackParser.parse(exception);
+        var data = this.generateAppInsightsData(ApplicationInsights.names.exception, ApplicationInsights.types.exception, {
+            ver: 1,
+            handledAt: "Unhandled",
+            exceptions: [
+                {
+                    typeName: exception.name,
+                    message: exception.message,
+                    stack: exception.stack,
+                    parsedStack: parsedStack,
+                    hasFullStack: !Tools.isNullOrUndefined(parsedStack)
+                }
+            ]
+        });
+        this.sendData(data);
+    };
+    ApplicationInsights.prototype.generateAppInsightsData = function (payloadName, payloadDataType, payloadData) {
+        if (this._commonProperties) {
+            payloadData.properties = payloadData.properties || {};
+            Tools.extend(payloadData.properties, this._commonProperties);
+        }
+        return {
+            name: payloadName,
+            time: new Date().toISOString(),
+            ver: 1,
+            iKey: this.options.instrumentationKey,
+            user: { id: this.getUniqueId() },
+            session: {
+                id: this.getSessionId()
+            },
+            operation: {
+                id: Tools.generateGuid()
+            },
+            device: {
+                id: "browser",
+                locale: this._locale.id,
+                resolution: this._window.screen.availWidth + "x" + this._window.screen.availHeight
+            },
+            internal: {
+                sdkVersion: this._version
+            },
+            data: {
+                type: payloadDataType,
+                item: payloadData
+            }
+        };
+    };
+    ApplicationInsights.prototype.setCommonProperties = function (data) {
+        this.validateProperties(data);
+        this._commonProperties = this._commonProperties || {};
+        Tools.extend(this._commonProperties, data);
+    };
+    ApplicationInsights.namespace = "Microsoft.ApplicationInsights.";
+    ApplicationInsights.names = {
+        pageViews: ApplicationInsights.namespace + "Pageview",
+        traceMessage: ApplicationInsights.namespace + "Message",
+        events: ApplicationInsights.namespace + "Event",
+        metrics: ApplicationInsights.namespace + "Metric",
+        exception: ApplicationInsights.namespace + "Exception"
+    };
+    ApplicationInsights.types = {
+        pageViews: ApplicationInsights.namespace + "PageviewData",
+        traceMessage: ApplicationInsights.namespace + "MessageData",
+        events: ApplicationInsights.namespace + "EventData",
+        metrics: ApplicationInsights.namespace + "MetricData",
+        exception: ApplicationInsights.namespace + "ExceptionData"
+    };
+    return ApplicationInsights;
+})();
+/// <reference path="./ApplicationInsights.ts" />
+// Application Insights Module
+var angularAppInsights = angular.module("ApplicationInsightsModule", []);
+var logInterceptor;
+var exceptionInterceptor;
+var tools = new Tools(angular);
+// setup some features that can only be done during the configure pass
+angularAppInsights.config([
+    "$provide", function ($provide) {
+        logInterceptor = new LogInterceptor($provide, angular);
+        exceptionInterceptor = new ExceptionInterceptor($provide);
+    }
+]);
+angularAppInsights.provider("applicationInsightsService", function () { return new AppInsightsProvider(); });
+// the run block sets up automatic page view tracking
+angularAppInsights.run([
+    "$rootScope", "$location", "applicationInsightsService", function ($rootScope, $location, applicationInsightsService) {
+        $rootScope.$on("$locationChangeSuccess", function () {
+            if (applicationInsightsService.options.autoPageViewTracking) {
+                applicationInsightsService.trackPageView(applicationInsightsService.options.applicationName + $location.path());
+            }
+        });
+    }
+]);
+var AppInsightsProvider = (function () {
+    function AppInsightsProvider() {
+        var _this = this;
+        // configuration properties for the provider
+        this._options = new Options();
+        this.$get = ["$locale", "$window", "$location", "$rootScope", "$parse", "$document", function ($locale, $window, $location, $rootScope, $parse, $document) {
+                // get a reference of storage
+                var storage = new AppInsightsStorage({
+                    window: $window,
+                    rootScope: $rootScope,
+                    document: $document,
+                    parse: $parse
+                });
+                return new ApplicationInsights(storage, $locale, $window, $location, logInterceptor, exceptionInterceptor, function () { return new HttpRequest(); }, _this._options);
+            }
+        ];
+    }
+    AppInsightsProvider.prototype.configure = function (instrumentationKey, applicationName, enableAutoPageViewTracking) {
+        if (Tools.isString(applicationName)) {
+            this._options.instrumentationKey = instrumentationKey;
+            this._options.applicationName = applicationName;
+            this._options.autoPageViewTracking = Tools.isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
+        }
+        else {
+            Tools.extend(this._options, applicationName);
+            this._options.instrumentationKey = instrumentationKey;
+        }
+    }; // invoked when the provider is run
+    return AppInsightsProvider;
+})();

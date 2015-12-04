@@ -6,13 +6,14 @@
 /// <reference path="./LogInterceptor.ts" />
 /// <reference path="./ExceptionInterceptor.ts" />
 /// <reference path="./Options.ts" />
+/// <reference path="./HTTPRequest.ts" />
 class ApplicationInsights {
 
     private _localStorage: AppInsightsStorage;
-    private _http: angular.IHttpService;
     private _locale: angular.ILocaleService;
     private _window: angular.IWindowService;
     private _location: angular.ILocationService;
+    private _httpRequestFactory:()=>IHttpRequest;
 
     private _log: any;
     private _exceptionHandler: any;
@@ -46,20 +47,19 @@ class ApplicationInsights {
 
 
     constructor(localStorage: AppInsightsStorage,
-        $http: angular.IHttpService,
         $locale: angular.ILocaleService,
         $window: angular.IWindowService,
         $location: angular.ILocationService,
         logInterceptor: LogInterceptor,
         exceptionInterceptor: ExceptionInterceptor,
+        httpRequestFactory:()=>IHttpRequest,
         options: Options) {
 
         this._localStorage = localStorage;
-        this._http = $http;
         this._locale = $locale;
         this._window = $window;
         this._location = $location;
-
+        this._httpRequestFactory = httpRequestFactory;
         this.options = options;
         this._log = logInterceptor.getPrivateLoggingObject();
         this._exceptionHandler = exceptionInterceptor.getPrivateExceptionHanlder();
@@ -202,34 +202,25 @@ class ApplicationInsights {
 
     private sendData(data) {
 
-        // bug # 24 : create a header object that filters out any default assigned header that will not be accepted by a browser's CORS check
-        const headers = new TelemetryRequestHeaders();
-        for (let header in <any>this._http.defaults.headers.common) {
-            headers[header] = undefined;
-        }
+        var request = this._httpRequestFactory();
 
-        for (let postHeader in <any>this._http.defaults.headers.post) {
-            headers[postHeader] = undefined;
-        }
-
+        var headers = {};
         headers["Accept"] = this._contentType; // jshint ignore:line
         headers["Content-Type"] = this._contentType;
-        const request: TelemetryRequest = {
+         var options: HttpRequestOptions = {
             method: "POST",
             url: this._analyticsServiceUrl,
             headers: headers,
             data: data,
-            // bugfix for issue# 18: disable credentials on CORS requests.
-            withCredentials: false
         };
         try {
-            this._http(request)
-                .success((data, status, headers, config) => {
+           request.send(options,
+                () => {
                     ExceptionInterceptor.errorOnHttpCall = false;
                     // this callback will be called asynchronously
                     // when the response is available
-                })
-                .error((data, status, headers, config) => {
+                },
+                (statusCode) => {
                     // called asynchronously if an error occurs
                     // or server returns response with an error status.
                     ExceptionInterceptor.errorOnHttpCall = true;
