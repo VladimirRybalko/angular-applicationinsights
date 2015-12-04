@@ -15,12 +15,10 @@ describe('Application Insights for Angular JS Provider', function(){
             
             _http(options)
                 .then(function (response) {
-                    console.log("success");
                         // success
                         successCallback();
                     },
                     function (response) {
-                        console.log("Failure");
                         //failure
                         errorCallback(0);
                     });
