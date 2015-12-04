@@ -1,14 +1,14 @@
 /// <reference path="./ApplicationInsights.ts" />
 declare var angular: angular.IAngularStatic;
 
-var httpRequestService = angular.module("$$ApplicationInsights-HttpRequest", []);
+var httpRequestService = angular.module("$$ApplicationInsights-HttpRequestModule", []);
 httpRequestService.factory("$$applicationInsightsHttpRequestService", () => {
     return ()=> new HttpRequest();
 });
 
 
 // Application Insights Module
-var angularAppInsights = angular.module("ApplicationInsightsModule", ["$$ApplicationInsights-HttpRequest"]);
+var angularAppInsights = angular.module("ApplicationInsightsModule", ["$$ApplicationInsights-HttpRequestModule"]);
 var logInterceptor: LogInterceptor;
 var exceptionInterceptor: ExceptionInterceptor;
 var tools = new Tools(angular);
