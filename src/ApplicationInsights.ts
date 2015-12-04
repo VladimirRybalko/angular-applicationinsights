@@ -41,7 +41,7 @@ class ApplicationInsights {
 
     private _commonProperties: any;
 
-    private _version = "angular:0.2.6";
+    private _version = "angular:0.2.7";
     private _analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
     private _contentType = "application/json";
 

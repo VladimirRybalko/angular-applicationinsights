@@ -1,3 +1,8 @@
+// Code here will be linted with JSHint.
+/* jshint ignore:start */
+(function(angular){
+// Code here will be ignored by JSHint.
+/* jshint ignore:end */
 /// <reference path="typings/angularjs/angular.d.ts" />
 var Tools = (function () {
     function Tools(angular) {
@@ -342,9 +347,7 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
-            /* test-code */
-            console.log('LineNumber is ' + v);
-            /* end-test-code */
+
             this.lineNumber = undefined;
             return;
         }
@@ -644,7 +647,7 @@ var ApplicationInsights = (function () {
     function ApplicationInsights(localStorage, $locale, $window, $location, logInterceptor, exceptionInterceptor, httpRequestFactory, options) {
         var _this = this;
         this._sessionKey = "$$appInsights__session";
-        this._version = "angular:0.2.6";
+        this._version = "angular:0.2.7";
         this._analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
         this._contentType = "application/json";
         this._localStorage = localStorage;
@@ -907,8 +910,12 @@ var ApplicationInsights = (function () {
     return ApplicationInsights;
 })();
 /// <reference path="./ApplicationInsights.ts" />
+var httpRequestService = angular.module("$$ApplicationInsights-HttpRequestModule", []);
+httpRequestService.factory("$$applicationInsightsHttpRequestService", function () {
+    return function () { return new HttpRequest(); };
+});
 // Application Insights Module
-var angularAppInsights = angular.module("ApplicationInsightsModule", []);
+var angularAppInsights = angular.module("ApplicationInsightsModule", ["$$ApplicationInsights-HttpRequestModule"]);
 var logInterceptor;
 var exceptionInterceptor;
 var tools = new Tools(angular);
@@ -935,7 +942,7 @@ var AppInsightsProvider = (function () {
         var _this = this;
         // configuration properties for the provider
         this._options = new Options();
-        this.$get = ["$locale", "$window", "$location", "$rootScope", "$parse", "$document", function ($locale, $window, $location, $rootScope, $parse, $document) {
+        this.$get = ["$locale", "$window", "$location", "$rootScope", "$parse", "$document", "$$applicationInsightsHttpRequestService", function ($locale, $window, $location, $rootScope, $parse, $document, $$applicationInsightsHttpRequestService) {
                 // get a reference of storage
                 var storage = new AppInsightsStorage({
                     window: $window,
@@ -943,7 +950,7 @@ var AppInsightsProvider = (function () {
                     document: $document,
                     parse: $parse
                 });
-                return new ApplicationInsights(storage, $locale, $window, $location, logInterceptor, exceptionInterceptor, function () { return new HttpRequest(); }, _this._options);
+                return new ApplicationInsights(storage, $locale, $window, $location, logInterceptor, exceptionInterceptor, $$applicationInsightsHttpRequestService, _this._options);
             }
         ];
     }
@@ -960,3 +967,9 @@ var AppInsightsProvider = (function () {
     }; // invoked when the provider is run
     return AppInsightsProvider;
 })();
+//# sourceMappingURL=angular-applicationinsights.js.map
+// Code here will be linted with JSHint.
+/* jshint ignore:start */
+})(window.angular);
+// Code here will be ignored by JSHint.
+/* jshint ignore:end */
