@@ -319,7 +319,10 @@ class ApplicationInsights {
             time: new Date().toISOString(),
             ver: 1,
             iKey: this.options.instrumentationKey,
-            user: { id: this.getUniqueId() },
+            user: {
+                id: this.getUniqueId(),
+                type: "User"
+            },
             session: {
                 id: this.getSessionId()
             },
@@ -329,7 +332,8 @@ class ApplicationInsights {
             device: {
                 id: "browser",
                 locale: this._locale.id,
-                resolution: this._window.screen.availWidth + "x" + this._window.screen.availHeight
+                resolution: this._window.screen.availWidth + "x" + this._window.screen.availHeight,
+                type: "Browser"
             },
             internal: {
                 sdkVersion: this._version
