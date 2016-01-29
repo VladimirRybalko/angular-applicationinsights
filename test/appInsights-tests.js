@@ -70,7 +70,7 @@ describe('Application Insights for Angular JS Provider', function(){
 
 				//expect(data.length).toEqual(1);
 				expect(data.name).toEqual('Microsoft.ApplicationInsights.Pageview');
-				expect(data.data.type).toEqual('Microsoft.ApplicationInsights.PageviewData');
+				expect(data.data.type).toEqual('Microsoft.ApplicationInsights.PageViewData');
 				expect(data.data.item.ver).toEqual(1);
 				expect(data.data.item.url).toEqual('http://www.somewhere.com/sometest/page');
 				expect(data.data.item.properties.testprop).toEqual('testvalue');
