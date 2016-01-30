@@ -32,7 +32,7 @@ class ApplicationInsights {
         exception: ApplicationInsights.namespace + "Exception"
     };
     private static types = {
-        pageViews: ApplicationInsights.namespace + "PageviewData",
+        pageViews: ApplicationInsights.namespace + "PageViewData",
         traceMessage: ApplicationInsights.namespace + "MessageData",
         events: ApplicationInsights.namespace + "EventData",
         metrics: ApplicationInsights.namespace + "MetricData",
