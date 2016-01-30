@@ -647,7 +647,7 @@ var ApplicationInsights = (function () {
     function ApplicationInsights(localStorage, $locale, $window, $location, logInterceptor, exceptionInterceptor, httpRequestFactory, options) {
         var _this = this;
         this._sessionKey = "$$appInsights__session";
-        this._version = "angular:0.2.7";
+        this._version = "angular:0.2.8";
         this._analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
         this._contentType = "application/json";
         this._localStorage = localStorage;
@@ -905,7 +905,7 @@ var ApplicationInsights = (function () {
         exception: ApplicationInsights.namespace + "Exception"
     };
     ApplicationInsights.types = {
-        pageViews: ApplicationInsights.namespace + "PageviewData",
+        pageViews: ApplicationInsights.namespace + "PageViewData",
         traceMessage: ApplicationInsights.namespace + "MessageData",
         events: ApplicationInsights.namespace + "EventData",
         metrics: ApplicationInsights.namespace + "MetricData",
