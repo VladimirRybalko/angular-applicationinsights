@@ -58,14 +58,21 @@
         }
 
         delegator(orignalFn, level) {
-            return function() {
+     
+            var interceptingFn = function () {
                 var args = [].slice.call(arguments);
                 // track the call
                 LogInterceptor.interceptFuntion(args[0], level);
                 // Call the original 
                 orignalFn.apply(null, args);
             };
+            
+            for(var n in orignalFn){
+            
+                interceptingFn[n] = orignalFn[n];
+            }
+            
+            return interceptingFn;
         }
-
 
     }
