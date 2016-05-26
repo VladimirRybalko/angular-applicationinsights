@@ -31,11 +31,11 @@
                     this._errorFn = $delegate.error;
                     this._logFn = $delegate.log;
 
-                    $delegate.debug = this.delegator(this._debugFn, 'debug');
-                    $delegate.info = this.delegator(this._infoFn, 'info');
-                    $delegate.warn = this.delegator(this._warnFn, 'warn');
-                    $delegate.error = this.delegator(this._errorFn, 'error');
-                    $delegate.log = this.delegator(this._logFn, 'log');
+                    $delegate.debug = angular.extend(this.delegator(this._debugFn, 'debug'), this._debugFn);
+                    $delegate.info = angular.extend(this.delegator(this._infoFn, 'info'), this._infoFn);
+                    $delegate.warn = angular.extend(this.delegator(this._warnFn, 'warn'), this._warnFn);
+                    $delegate.error = angular.extend(this.delegator(this._errorFn, 'error'), this._errorFn);
+                    $delegate.log = angular.extend(this.delegator(this._logFn, 'log'), this._logFn);
 
                     return $delegate;
                 }
