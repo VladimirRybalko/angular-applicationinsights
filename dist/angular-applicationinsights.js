@@ -35,7 +35,7 @@ var Tools = (function () {
         return value.join("");
     };
     return Tools;
-})();
+}());
 /// <reference path="./Tools.ts" />
 /*
 * Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
@@ -279,19 +279,19 @@ var AppInsightsStorage = (function () {
         }
     };
     return AppInsightsStorage;
-})();
+}());
 /// <reference path="typings/angularjs/angular.d.ts" />
 /// <reference path="./Tools.ts" />
 var TelemetryRequest = (function () {
     function TelemetryRequest() {
     }
     return TelemetryRequest;
-})();
+}());
 var TelemetryRequestHeaders = (function () {
     function TelemetryRequestHeaders() {
     }
     return TelemetryRequestHeaders;
-})();
+}());
 /// <reference path="./Tools.ts" />
 /*
 * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
@@ -378,7 +378,7 @@ var StackFrame = (function () {
         return functionName + args + fileName + lineNumber + columnNumber;
     };
     return StackFrame;
-})();
+}());
 /// <reference path="./Tools.ts" />
 /// <reference path="./StackFrame.ts" />
 var StackParser = (function () {
@@ -511,7 +511,7 @@ var StackParser = (function () {
     StackParser.firefoxSafariStackRegexp = /\S+\:\d+/;
     StackParser.chromeIeStackRegexp = /\s+at /;
     return StackParser;
-})();
+}());
 ///<reference path="./Tools.ts" />
 // $log interceptor .. will send log data to application insights, once app insights is 
 // registered. $provide is only available in the config phase, so we need to setup
@@ -530,11 +530,11 @@ var LogInterceptor = (function () {
                 _this._warnFn = $delegate.warn;
                 _this._errorFn = $delegate.error;
                 _this._logFn = $delegate.log;
-                $delegate.debug = _this.delegator(_this._debugFn, 'debug');
-                $delegate.info = _this.delegator(_this._infoFn, 'info');
-                $delegate.warn = _this.delegator(_this._warnFn, 'warn');
-                $delegate.error = _this.delegator(_this._errorFn, 'error');
-                $delegate.log = _this.delegator(_this._logFn, 'log');
+                $delegate.debug = angular.extend(_this.delegator(_this._debugFn, 'debug'), _this._debugFn);
+                $delegate.info = angular.extend(_this.delegator(_this._infoFn, 'info'), _this._infoFn);
+                $delegate.warn = angular.extend(_this.delegator(_this._warnFn, 'warn'), _this._warnFn);
+                $delegate.error = angular.extend(_this.delegator(_this._errorFn, 'error'), _this._errorFn);
+                $delegate.log = angular.extend(_this.delegator(_this._logFn, 'log'), _this._logFn);
                 return $delegate;
             }
         ]);
@@ -561,7 +561,7 @@ var LogInterceptor = (function () {
         };
     };
     return LogInterceptor;
-})();
+}());
 /// <reference path="./Tools.ts" />
 // Exception interceptor
 // Intercepts calls to the $exceptionHandler and sends them to Application insights as exception telemetry.
@@ -592,7 +592,7 @@ var ExceptionInterceptor = (function () {
         return Tools.isNullOrUndefined(this._origExceptionHandler) ? Tools.noop : this._origExceptionHandler;
     };
     return ExceptionInterceptor;
-})();
+}());
 var Options = (function () {
     function Options() {
         this.applicationName = '';
@@ -603,7 +603,7 @@ var Options = (function () {
         this.instrumentationKey = '';
     }
     return Options;
-})();
+}());
 var HttpRequest = (function () {
     function HttpRequest() {
     }
@@ -628,12 +628,12 @@ var HttpRequest = (function () {
         request.send(JSON.stringify(options.data));
     };
     return HttpRequest;
-})();
+}());
 var HttpRequestOptions = (function () {
     function HttpRequestOptions() {
     }
     return HttpRequestOptions;
-})();
+}());
 /// <reference path="typings/angularjs/angular.d.ts" />
 /// <reference path="./Tools.ts" />
 /// <reference path="./Storage.ts" />
@@ -912,7 +912,7 @@ var ApplicationInsights = (function () {
         exception: ApplicationInsights.namespace + "ExceptionData"
     };
     return ApplicationInsights;
-})();
+}());
 /// <reference path="./ApplicationInsights.ts" />
 var httpRequestService = angular.module("$$ApplicationInsights-HttpRequestModule", []);
 httpRequestService.factory("$$applicationInsightsHttpRequestService", function () {
@@ -970,7 +970,7 @@ var AppInsightsProvider = (function () {
         }
     }; // invoked when the provider is run
     return AppInsightsProvider;
-})();
+}());
 //# sourceMappingURL=angular-applicationinsights.js.map
 // Code here will be linted with JSHint.
 /* jshint ignore:start */
