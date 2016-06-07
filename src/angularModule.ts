@@ -38,7 +38,9 @@ angularAppInsights.run([
 
         $rootScope.$on("$viewContentLoaded", (e, view) => {
 
-            if (applicationInsightsService.options.autoPageViewTracking) {
+            if (applicationInsightsService.options.autoPageViewTracking
+                    && locationChangeStartOn) {
+
                 var duration = (new Date()).getTime() - locationChangeStartOn;
                 var name = applicationInsightsService.options.applicationName + $location.path();
 
