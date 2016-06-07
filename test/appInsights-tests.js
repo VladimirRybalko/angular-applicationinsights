@@ -75,7 +75,7 @@ describe('Application Insights for Angular JS Provider', function(){
 				expect(data.data.item.url).toEqual('http://www.somewhere.com/sometest/page');
 				expect(data.data.item.properties.testprop).toEqual('testvalue');
 				expect(data.data.item.measurements.metric1).toEqual(2345);
-
+				expect(data.data.item.duration).toEqual(3456);
 
 				return true;
 			}, function(headers){
@@ -85,7 +85,7 @@ describe('Application Insights for Angular JS Provider', function(){
 			.respond(200,'');
 
 
-			_insights.trackPageView('/sometest/page','http://www.somewhere.com/sometest/page',{testprop:'testvalue'},{metric1:2345});
+			_insights.trackPageView('/sometest/page','http://www.somewhere.com/sometest/page',{testprop:'testvalue'},{metric1:2345}, 3456);
 			$httpBackend.flush();
  
 		});

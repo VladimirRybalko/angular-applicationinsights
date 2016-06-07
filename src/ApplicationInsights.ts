@@ -175,6 +175,20 @@ class ApplicationInsights {
         return validateProperties;
     }
 
+    private validateDuration(duration) {
+
+        if (Tools.isNullOrUndefined(duration)) {
+            return null;
+        }
+
+        if (!Tools.isNumber(duration) || duration < 0) {
+            this._log.warn("The value of the durations parameter must be a positive number");
+            return null;
+        }
+
+        return duration;
+    }
+
     private validateSeverityLevel(level) {
         // https://github.com/Microsoft/ApplicationInsights-JS/blob/7bbf8b7a3b4e3610cefb31e9d61765a2897dcb3b/JavaScript/JavaScriptSDK/Contracts/Generated/SeverityLevel.ts
         /*
@@ -230,7 +244,7 @@ class ApplicationInsights {
         }
     }
 
-    trackPageView(pageName?, pageUrl?, properties?, measurements?) {
+    trackPageView(pageName?, pageUrl?, properties?, measurements?, duration?: number) {
         // TODO: consider possible overloads (no name or url but properties and measurements)
         const data = this.generateAppInsightsData(ApplicationInsights.names.pageViews,
             ApplicationInsights.types.pageViews,
@@ -239,7 +253,8 @@ class ApplicationInsights {
                 url: Tools.isNullOrUndefined(pageUrl) ? this._location.absUrl() : pageUrl,
                 name: Tools.isNullOrUndefined(pageName) ? this._location.path() : pageName,
                 properties: this.validateProperties(properties),
-                measurements: this.validateMeasurements(measurements)
+                measurements: this.validateMeasurements(measurements),
+                duration: this.validateDuration(duration)
             });
         this.sendData(data);
     }
