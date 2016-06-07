@@ -34,7 +34,7 @@ describe('Application Insights for Angular JS Provider', function(){
 
 	}));
 
-	beforeEach(inject(function (applicationInsightsService, $injector,$http) {
+	beforeEach(inject(function (applicationInsightsService,$injector,$http) {
 	    _insights = applicationInsightsService;
 	    $httpBackend = $injector.get('$httpBackend');
 	    $log = $injector.get('$log');
@@ -60,7 +60,11 @@ describe('Application Insights for Angular JS Provider', function(){
     	});
 	});
 
-	describe('Page view Tracking', function(){
+	describe('Page view Tracking', function() {
+
+	  beforeEach(inject(function(applicationInsightsService) {
+  	    applicationInsightsService.options.autoPageViewTracking = true;
+	  }));
 
 		it('Sent data should match expectications',function(){
 
@@ -89,6 +93,27 @@ describe('Application Insights for Angular JS Provider', function(){
 			$httpBackend.flush();
  
 		});
+
+	  it('Tracking sent on $locationChangeStart+$ViewContentLoad', inject(function($rootScope) {
+
+	      var viewName = 'VIEW_NAME';
+
+	      $httpBackend.resetExpectations();
+	      $httpBackend.expect('POST', 'https://dc.services.visualstudio.com/v2/track', function(json) {
+	          var data = JSON.parse(json);
+	          
+	          expect(data.data.item.name).toEqual('angularjs-appinsights-unittests#VIEW_NAME');
+
+	          return true;
+	        })
+	      .respond(200, '');
+
+	      $rootScope.$broadcast('$locationChangeStart');
+	      $rootScope.$broadcast('$viewContentLoaded', viewName);
+
+	      $httpBackend.flush();
+
+	    }));
 	});
 
 	describe('Log Message Tracking', function(){
