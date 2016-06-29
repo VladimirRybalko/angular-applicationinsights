@@ -202,6 +202,11 @@ class ApplicationInsights {
 
     private sendData(data) {
 
+        if (this.options.developerMode) {
+            console.log(data);
+            return;
+        }
+
         var request = this._httpRequestFactory();
 
         var headers = {};

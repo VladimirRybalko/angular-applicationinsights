@@ -40,9 +40,10 @@ class AppInsightsProvider implements angular.IServiceProvider {
     // configuration properties for the provider
     private _options = new Options();
 
-    configure(instrumentationKey, applicationName, enableAutoPageViewTracking) {
-        if (Tools.isString(applicationName)) {
+    configure(instrumentationKey, applicationName, enableAutoPageViewTracking, developerMode) {
+        if (Tools.isString(applicationName)) {            
             this._options.instrumentationKey = instrumentationKey;
+            this._options.developerMode = developerMode;
             this._options.applicationName = applicationName;
             this._options.autoPageViewTracking = Tools.isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
         } else {
