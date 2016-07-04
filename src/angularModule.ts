@@ -25,24 +25,43 @@ angularAppInsights.provider("applicationInsightsService", () => new AppInsightsP
 
 // the run block sets up automatic page view tracking
 angularAppInsights.run([
-    "$rootScope", "$location", "applicationInsightsService", ($rootScope, $location, applicationInsightsService: ApplicationInsights) => {
-        $rootScope.$on("$locationChangeSuccess", () => {
+    "$rootScope", "$location", "applicationInsightsService",
+    ($rootScope, $location, applicationInsightsService: ApplicationInsights) => {
+        var locationChangeStartOn: number;
+
+        $rootScope.$on("$locationChangeStart", () => {
 
             if (applicationInsightsService.options.autoPageViewTracking) {
-                applicationInsightsService.trackPageView(applicationInsightsService.options.applicationName + $location.path());
+                locationChangeStartOn = (new Date()).getTime();
+            }
+        });
+
+        $rootScope.$on("$viewContentLoaded", (e, view) => {
+
+            if (applicationInsightsService.options.autoPageViewTracking
+                    && locationChangeStartOn) {
+
+                var duration = (new Date()).getTime() - locationChangeStartOn;
+                var name = applicationInsightsService.options.applicationName + $location.path();
+
+                if (view) {
+                    name += "#" + view;
+                }
+
+                applicationInsightsService.trackPageView(name, null, null, null, duration);
             }
         });
     }
 ]);
 
-
 class AppInsightsProvider implements angular.IServiceProvider {
     // configuration properties for the provider
     private _options = new Options();
 
-    configure(instrumentationKey, applicationName, enableAutoPageViewTracking) {
-        if (Tools.isString(applicationName)) {
+    configure(instrumentationKey, applicationName, enableAutoPageViewTracking, developerMode) {
+        if (Tools.isString(applicationName)) {            
             this._options.instrumentationKey = instrumentationKey;
+            this._options.developerMode = developerMode;
             this._options.applicationName = applicationName;
             this._options.autoPageViewTracking = Tools.isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
         } else {
