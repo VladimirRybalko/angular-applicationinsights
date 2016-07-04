@@ -1,8 +1,3 @@
-// Code here will be linted with JSHint.
-/* jshint ignore:start */
-(function(angular){
-// Code here will be ignored by JSHint.
-/* jshint ignore:end */
 /// <reference path="typings/angularjs/angular.d.ts" />
 var Tools = (function () {
     function Tools(angular) {
@@ -35,7 +30,7 @@ var Tools = (function () {
         return value.join("");
     };
     return Tools;
-})();
+}());
 /// <reference path="./Tools.ts" />
 /*
 * Storage is heavily based on the angular storage module by Gregory Pike (https://github.com/grevory/angular-local-storage)
@@ -279,19 +274,19 @@ var AppInsightsStorage = (function () {
         }
     };
     return AppInsightsStorage;
-})();
+}());
 /// <reference path="typings/angularjs/angular.d.ts" />
 /// <reference path="./Tools.ts" />
 var TelemetryRequest = (function () {
     function TelemetryRequest() {
     }
     return TelemetryRequest;
-})();
+}());
 var TelemetryRequestHeaders = (function () {
     function TelemetryRequestHeaders() {
     }
     return TelemetryRequestHeaders;
-})();
+}());
 /// <reference path="./Tools.ts" />
 /*
 * Stack parsing by the stacktracejs project @ https://github.com/stacktracejs/error-stack-parser
@@ -347,7 +342,9 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
-
+            /* test-code */
+            console.log('LineNumber is ' + v);
+            /* end-test-code */
             this.lineNumber = undefined;
             return;
         }
@@ -378,7 +375,7 @@ var StackFrame = (function () {
         return functionName + args + fileName + lineNumber + columnNumber;
     };
     return StackFrame;
-})();
+}());
 /// <reference path="./Tools.ts" />
 /// <reference path="./StackFrame.ts" />
 var StackParser = (function () {
@@ -511,7 +508,7 @@ var StackParser = (function () {
     StackParser.firefoxSafariStackRegexp = /\S+\:\d+/;
     StackParser.chromeIeStackRegexp = /\s+at /;
     return StackParser;
-})();
+}());
 ///<reference path="./Tools.ts" />
 // $log interceptor .. will send log data to application insights, once app insights is 
 // registered. $provide is only available in the config phase, so we need to setup
@@ -552,16 +549,20 @@ var LogInterceptor = (function () {
         };
     };
     LogInterceptor.prototype.delegator = function (orignalFn, level) {
-        return function () {
+        var interceptingFn = function () {
             var args = [].slice.call(arguments);
             // track the call
             LogInterceptor.interceptFuntion(args[0], level);
             // Call the original 
             orignalFn.apply(null, args);
         };
+        for (var n in orignalFn) {
+            interceptingFn[n] = orignalFn[n];
+        }
+        return interceptingFn;
     };
     return LogInterceptor;
-})();
+}());
 /// <reference path="./Tools.ts" />
 // Exception interceptor
 // Intercepts calls to the $exceptionHandler and sends them to Application insights as exception telemetry.
@@ -592,7 +593,7 @@ var ExceptionInterceptor = (function () {
         return Tools.isNullOrUndefined(this._origExceptionHandler) ? Tools.noop : this._origExceptionHandler;
     };
     return ExceptionInterceptor;
-})();
+}());
 var Options = (function () {
     function Options() {
         this.applicationName = '';
@@ -601,9 +602,10 @@ var Options = (function () {
         this.autoExceptionTracking = true;
         this.sessionInactivityTimeout = 1800000;
         this.instrumentationKey = '';
+        this.developerMode = true;
     }
     return Options;
-})();
+}());
 var HttpRequest = (function () {
     function HttpRequest() {
     }
@@ -628,12 +630,12 @@ var HttpRequest = (function () {
         request.send(JSON.stringify(options.data));
     };
     return HttpRequest;
-})();
+}());
 var HttpRequestOptions = (function () {
     function HttpRequestOptions() {
     }
     return HttpRequestOptions;
-})();
+}());
 /// <reference path="typings/angularjs/angular.d.ts" />
 /// <reference path="./Tools.ts" />
 /// <reference path="./Storage.ts" />
@@ -771,6 +773,10 @@ var ApplicationInsights = (function () {
         return levelEnum > -1 ? levelEnum : 0;
     };
     ApplicationInsights.prototype.sendData = function (data) {
+        if (this.options.developerMode) {
+            console.log(data);
+            return;
+        }
         var request = this._httpRequestFactory();
         var headers = {};
         headers["Accept"] = this._contentType; // jshint ignore:line
@@ -912,7 +918,7 @@ var ApplicationInsights = (function () {
         exception: ApplicationInsights.namespace + "ExceptionData"
     };
     return ApplicationInsights;
-})();
+}());
 /// <reference path="./ApplicationInsights.ts" />
 var httpRequestService = angular.module("$$ApplicationInsights-HttpRequestModule", []);
 httpRequestService.factory("$$applicationInsightsHttpRequestService", function () {
@@ -958,9 +964,10 @@ var AppInsightsProvider = (function () {
             }
         ];
     }
-    AppInsightsProvider.prototype.configure = function (instrumentationKey, applicationName, enableAutoPageViewTracking) {
+    AppInsightsProvider.prototype.configure = function (instrumentationKey, applicationName, enableAutoPageViewTracking, developerMode) {
         if (Tools.isString(applicationName)) {
             this._options.instrumentationKey = instrumentationKey;
+            this._options.developerMode = developerMode;
             this._options.applicationName = applicationName;
             this._options.autoPageViewTracking = Tools.isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
         }
@@ -970,10 +977,5 @@ var AppInsightsProvider = (function () {
         }
     }; // invoked when the provider is run
     return AppInsightsProvider;
-})();
+}());
 //# sourceMappingURL=angular-applicationinsights.js.map
-// Code here will be linted with JSHint.
-/* jshint ignore:start */
-})(window.angular);
-// Code here will be ignored by JSHint.
-/* jshint ignore:end */

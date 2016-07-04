@@ -21,9 +21,9 @@
   ],
   "version": "0.2.8",
   "files": [
-    "build/angular-applicationinsights.min.js"
+    "dist/angular-applicationinsights.min.js"
   ],
-  "main": "build/angular-applicationinsights.min.js",
+  "main": "dist/angular-applicationinsights.min.js",
   "scripts": {
     "test": "grunt"
   },
