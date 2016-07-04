@@ -25,16 +25,34 @@ angularAppInsights.provider("applicationInsightsService", () => new AppInsightsP
 
 // the run block sets up automatic page view tracking
 angularAppInsights.run([
-    "$rootScope", "$location", "applicationInsightsService", ($rootScope, $location, applicationInsightsService: ApplicationInsights) => {
-        $rootScope.$on("$locationChangeSuccess", () => {
+    "$rootScope", "$location", "applicationInsightsService",
+    ($rootScope, $location, applicationInsightsService: ApplicationInsights) => {
+        var locationChangeStartOn: number;
+
+        $rootScope.$on("$locationChangeStart", () => {
 
             if (applicationInsightsService.options.autoPageViewTracking) {
-                applicationInsightsService.trackPageView(applicationInsightsService.options.applicationName + $location.path());
+                locationChangeStartOn = (new Date()).getTime();
+            }
+        });
+
+        $rootScope.$on("$viewContentLoaded", (e, view) => {
+
+            if (applicationInsightsService.options.autoPageViewTracking
+                    && locationChangeStartOn) {
+
+                var duration = (new Date()).getTime() - locationChangeStartOn;
+                var name = applicationInsightsService.options.applicationName + $location.path();
+
+                if (view) {
+                    name += "#" + view;
+                }
+
+                applicationInsightsService.trackPageView(name, null, null, null, duration);
             }
         });
     }
 ]);
-
 
 class AppInsightsProvider implements angular.IServiceProvider {
     // configuration properties for the provider
