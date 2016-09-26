@@ -38,7 +38,7 @@ Install-Package angular-applicationinsights
 
 ####From Source
 ```
-> git clone https://github.com/khaines/angular-applicationinsights.git
+> git clone https://github.com/VladimirRybalko/angular-applicationinsights.git
 > cd angular-applicationinsights
 > npm install
 > grunt
@@ -65,7 +65,7 @@ Configure the provider during your application module's config phase:
 	var amazingApp = angular.module('amazingApp', ['ApplicationInsightsModule']);
 
 	amazingApp.config(function(applicationInsightsServiceProvider){
-		var options = {applicationName:'amazingApp'};
+		var options = {applicationName:'amazingApp', developerMode: false};
 		// Configuration options are described below 	 
         applicationInsightsServiceProvider.configure('<PUT YOUR APPLICATION INSIGHTS KEY HERE', options );
     });
@@ -95,7 +95,9 @@ var options = {
 	// autoExceptionTracking: enables calls to the $exceptionHandler service, usually unhandled exceptions, to have the error and stack data sent to Application Insights.
 	autoExceptionTracking: true,
 	// sessionInactivityTimeout: The time (in milliseconds) that a user session can be inactive, before a new session will be created (on the next api call). Default is 30mins.
-	sessionInactivityTimeout: 1800000
+	sessionInactivityTimeout: 1800000,
+	// developerMode: Makes the service not post anything to AI but print it to the console instead
+	developerMode: true
 	};
 	
 ```
