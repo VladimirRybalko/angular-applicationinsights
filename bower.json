@@ -6,7 +6,7 @@
     "Ken Haines <ken@kenhaines.net>"
   ],
   "description": "An angularJS module for using Microsoft Application Insights from within an angularJS application",
-  "main": ["dist/angular-applicationinsights.min.js", "dist/angular-applicationinsights.js"],
+  "main": ["dist/angular-applicationinsights.js"],
   "moduleType": [
     "amd"
   ],
