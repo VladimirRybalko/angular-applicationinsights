@@ -7,5 +7,5 @@
             autoExceptionTracking= true;
             sessionInactivityTimeout = 1800000;
             instrumentationKey = '';
-            developerMode = true;        
+            developerMode = false;        
     }

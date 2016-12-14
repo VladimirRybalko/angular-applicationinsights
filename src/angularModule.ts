@@ -3,7 +3,7 @@ declare var angular: angular.IAngularStatic;
 
 var httpRequestService = angular.module("$$ApplicationInsights-HttpRequestModule", []);
 httpRequestService.factory("$$applicationInsightsHttpRequestService", () => {
-    return ()=> new HttpRequest();
+    return () => new HttpRequest();
 });
 
 
@@ -39,7 +39,7 @@ angularAppInsights.run([
         $rootScope.$on("$viewContentLoaded", (e, view) => {
 
             if (applicationInsightsService.options.autoPageViewTracking
-                    && locationChangeStartOn) {
+                && locationChangeStartOn) {
 
                 var duration = (new Date()).getTime() - locationChangeStartOn;
                 var name = applicationInsightsService.options.applicationName + $location.path();
@@ -58,30 +58,23 @@ class AppInsightsProvider implements angular.IServiceProvider {
     // configuration properties for the provider
     private _options = new Options();
 
-    configure(instrumentationKey, applicationName, enableAutoPageViewTracking, developerMode) {
-        if (Tools.isString(applicationName)) {            
-            this._options.instrumentationKey = instrumentationKey;
-            this._options.developerMode = developerMode;
-            this._options.applicationName = applicationName;
-            this._options.autoPageViewTracking = Tools.isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
-        } else {
-            Tools.extend(this._options, applicationName);
-            this._options.instrumentationKey = instrumentationKey;
-        }
+    configure(instrumentationKey, options) {
+
+        Tools.extend(this._options, options);
+        this._options.instrumentationKey = instrumentationKey;
+
     } // invoked when the provider is run
     $get = ["$locale", "$window", "$location", "$rootScope", "$parse", "$document", "$$applicationInsightsHttpRequestService", ($locale, $window, $location, $rootScope, $parse, $document, $$applicationInsightsHttpRequestService) => {
 
-            // get a reference of storage
-            var storage = new AppInsightsStorage({
-                window: $window,
-                rootScope: $rootScope,
-                document: $document,
-                parse: $parse
-            });
+        // get a reference of storage
+        var storage = new AppInsightsStorage({
+            window: $window,
+            rootScope: $rootScope,
+            document: $document,
+            parse: $parse
+        });
 
-            return new ApplicationInsights(storage, $locale, $window, $location, logInterceptor, exceptionInterceptor, $$applicationInsightsHttpRequestService, this._options);
-        }
+        return new ApplicationInsights(storage, $locale, $window, $location, logInterceptor, exceptionInterceptor, $$applicationInsightsHttpRequestService, this._options);
+    }
     ];
-
-
 }

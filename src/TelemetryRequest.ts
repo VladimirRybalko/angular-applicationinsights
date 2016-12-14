@@ -5,9 +5,7 @@ class TelemetryRequest implements angular.IRequestConfig {
     url: string;
     headers: TelemetryRequestHeaders;
     data: string;
-    // bugfix for issue# 18: disable credentials on CORS requests.
     withCredentials: boolean;
-
 }
 
 

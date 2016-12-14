@@ -7,6 +7,9 @@ describe('Application Insights for Angular JS Provider', function(){
 	var $exceptionHandler;
     var _http;
 
+    var testKey = '1234567890';
+    var testName = 'angularjs-appinsights-unittests';
+    var testAutoPageView = false;
 
     beforeEach(module("$$ApplicationInsights-HttpRequestModule", function ($provide) {
 
@@ -29,8 +32,14 @@ describe('Application Insights for Angular JS Provider', function(){
 	} ));
 
 
-	beforeEach(module('ApplicationInsightsModule', function (applicationInsightsServiceProvider) {
-	    applicationInsightsServiceProvider.configure('1234567890', 'angularjs-appinsights-unittests', false);
+    beforeEach(module('ApplicationInsightsModule', function (applicationInsightsServiceProvider) {
+
+        var options = {
+            applicationName: testName,
+            autoPageViewTracking: testAutoPageView
+        };
+
+        applicationInsightsServiceProvider.configure(testKey, options);
 
 	}));
 
@@ -51,12 +60,16 @@ describe('Application Insights for Angular JS Provider', function(){
 
 	describe('Configuration Settings', function() {
 
+	    it('Should remember the configured intrumentation key', function () {
+	        expect(_insights.options.instrumentationKey).toEqual(testKey);
+	    });
+
 		it('Should remember the configured application name', function(){
-      		expect(_insights.options.applicationName).toEqual('angularjs-appinsights-unittests');
+      		expect(_insights.options.applicationName).toEqual(testName);
     	});
 
     	it('Should remember that automatic pageview tracking is disabled for tests', function(){
-    		expect(_insights.options.autoPageViewTracking).toEqual(false);
+    	    expect(_insights.options.autoPageViewTracking).toEqual(testAutoPageView);
     	});
 	});
 

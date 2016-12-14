@@ -32,7 +32,6 @@ describe('Application Insights for Angular JS Storage Tests', function () {
         var value = "mary had a little lamb";
         expect(storage.set('testkey', value)).toEqual(true);
         var actualValue = storage.get('testkey');
-        console.log(actualValue);
         expect(actualValue).toEqual(value);
     });
 
@@ -41,7 +40,6 @@ describe('Application Insights for Angular JS Storage Tests', function () {
         var value = "his fleece was white as snow";
         storage.setCookie('testkey', value);
         var actualValue = storage.getCookie('testkey');
-
         expect(actualValue).toEqual(value);
     });
 });

@@ -39,16 +39,10 @@ class Tools {
     }
 
     static generateGuid() {
-        const value = [];
-        const digits = "0123456789abcdef";
-        for (var i = 0; i < 36; i++) {
-            value[i] = digits.substr(Math.floor(Math.random() * 0x10), 1);
-        }
-        value[8] = value[13] = value[18] = value[23] = "-";
-        value[14] = "4";
-        value[19] = digits.substr((value[19] & 0x3) | 0x8, 1);
-        return value.join("");
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.
+            replace(/[xy]/g, c => {
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
     }
-
-
 }
