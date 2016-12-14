@@ -65,7 +65,7 @@ Configure the provider during your application module's config phase:
 	var amazingApp = angular.module('amazingApp', ['ApplicationInsightsModule']);
 
 	amazingApp.config(function(applicationInsightsServiceProvider){
-		var options = {applicationName:'amazingApp', developerMode: false};
+		var options = { applicationName:'amazingApp' };
 		// Configuration options are described below 	 
         applicationInsightsServiceProvider.configure('<PUT YOUR APPLICATION INSIGHTS KEY HERE', options );
     });
