@@ -1,12 +1,12 @@
 {
   "name": "angular-applicationinsights",
-  "version": "0.2.6",
-  "homepage": "https://github.com/khaines/angular-applicationinsights",
+  "version": "0.2.8",
+  "homepage": "https://github.com/VladimirRybalko/angular-applicationinsights",
   "authors": [
     "Ken Haines <ken@kenhaines.net>"
   ],
   "description": "An angularJS module for using Microsoft Application Insights from within an angularJS application",
-  "main": ["dist/angular-applicationinsights.js"],
+  "main": [ "dist/angular-applicationinsights.js" ],
   "moduleType": [
     "amd"
   ],

@@ -19,15 +19,11 @@ var Tools = (function () {
         return !isNaN(parseFloat(n)) && isFinite(n);
     };
     Tools.generateGuid = function () {
-        var value = [];
-        var digits = "0123456789abcdef";
-        for (var i = 0; i < 36; i++) {
-            value[i] = digits.substr(Math.floor(Math.random() * 0x10), 1);
-        }
-        value[8] = value[13] = value[18] = value[23] = "-";
-        value[14] = "4";
-        value[19] = digits.substr((value[19] & 0x3) | 0x8, 1);
-        return value.join("");
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.
+            replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
     };
     return Tools;
 }());
@@ -527,11 +523,11 @@ var LogInterceptor = (function () {
                 _this._warnFn = $delegate.warn;
                 _this._errorFn = $delegate.error;
                 _this._logFn = $delegate.log;
-                $delegate.debug = _this.delegator(_this._debugFn, 'debug');
-                $delegate.info = _this.delegator(_this._infoFn, 'info');
-                $delegate.warn = _this.delegator(_this._warnFn, 'warn');
-                $delegate.error = _this.delegator(_this._errorFn, 'error');
-                $delegate.log = _this.delegator(_this._logFn, 'log');
+                $delegate.debug = angular.extend(_this.delegator(_this._debugFn, 'debug'), _this._debugFn);
+                $delegate.info = angular.extend(_this.delegator(_this._infoFn, 'info'), _this._infoFn);
+                $delegate.warn = angular.extend(_this.delegator(_this._warnFn, 'warn'), _this._warnFn);
+                $delegate.error = angular.extend(_this.delegator(_this._errorFn, 'error'), _this._errorFn);
+                $delegate.log = angular.extend(_this.delegator(_this._logFn, 'log'), _this._logFn);
                 return $delegate;
             }
         ]);
@@ -602,7 +598,7 @@ var Options = (function () {
         this.autoExceptionTracking = true;
         this.sessionInactivityTimeout = 1800000;
         this.instrumentationKey = '';
-        this.developerMode = true;
+        this.developerMode = false;
     }
     return Options;
 }());
@@ -749,6 +745,16 @@ var ApplicationInsights = (function () {
         }
         return validateProperties;
     };
+    ApplicationInsights.prototype.validateDuration = function (duration) {
+        if (Tools.isNullOrUndefined(duration)) {
+            return null;
+        }
+        if (!Tools.isNumber(duration) || duration < 0) {
+            this._log.warn("The value of the durations parameter must be a positive number");
+            return null;
+        }
+        return duration;
+    };
     ApplicationInsights.prototype.validateSeverityLevel = function (level) {
         // https://github.com/Microsoft/ApplicationInsights-JS/blob/7bbf8b7a3b4e3610cefb31e9d61765a2897dcb3b/JavaScript/JavaScriptSDK/Contracts/Generated/SeverityLevel.ts
         /*
@@ -801,14 +807,15 @@ var ApplicationInsights = (function () {
         catch (e) {
         }
     };
-    ApplicationInsights.prototype.trackPageView = function (pageName, pageUrl, properties, measurements) {
+    ApplicationInsights.prototype.trackPageView = function (pageName, pageUrl, properties, measurements, duration) {
         // TODO: consider possible overloads (no name or url but properties and measurements)
         var data = this.generateAppInsightsData(ApplicationInsights.names.pageViews, ApplicationInsights.types.pageViews, {
             ver: 1,
             url: Tools.isNullOrUndefined(pageUrl) ? this._location.absUrl() : pageUrl,
             name: Tools.isNullOrUndefined(pageName) ? this._location.path() : pageName,
             properties: this.validateProperties(properties),
-            measurements: this.validateMeasurements(measurements)
+            measurements: this.validateMeasurements(measurements),
+            duration: this.validateDuration(duration)
         });
         this.sendData(data);
     };
@@ -939,10 +946,23 @@ angularAppInsights.config([
 angularAppInsights.provider("applicationInsightsService", function () { return new AppInsightsProvider(); });
 // the run block sets up automatic page view tracking
 angularAppInsights.run([
-    "$rootScope", "$location", "applicationInsightsService", function ($rootScope, $location, applicationInsightsService) {
-        $rootScope.$on("$locationChangeSuccess", function () {
+    "$rootScope", "$location", "applicationInsightsService",
+    function ($rootScope, $location, applicationInsightsService) {
+        var locationChangeStartOn;
+        $rootScope.$on("$locationChangeStart", function () {
             if (applicationInsightsService.options.autoPageViewTracking) {
-                applicationInsightsService.trackPageView(applicationInsightsService.options.applicationName + $location.path());
+                locationChangeStartOn = (new Date()).getTime();
+            }
+        });
+        $rootScope.$on("$viewContentLoaded", function (e, view) {
+            if (applicationInsightsService.options.autoPageViewTracking
+                && locationChangeStartOn) {
+                var duration = (new Date()).getTime() - locationChangeStartOn;
+                var name = applicationInsightsService.options.applicationName + $location.path();
+                if (view) {
+                    name += "#" + view;
+                }
+                applicationInsightsService.trackPageView(name, null, null, null, duration);
             }
         });
     }
@@ -964,18 +984,9 @@ var AppInsightsProvider = (function () {
             }
         ];
     }
-    AppInsightsProvider.prototype.configure = function (instrumentationKey, applicationName, enableAutoPageViewTracking, developerMode) {
-        if (Tools.isString(applicationName)) {
-            this._options.instrumentationKey = instrumentationKey;
-            this._options.developerMode = developerMode;
-            this._options.applicationName = applicationName;
-            this._options.autoPageViewTracking = Tools.isNullOrUndefined(enableAutoPageViewTracking) ? true : enableAutoPageViewTracking;
-        }
-        else {
-            Tools.extend(this._options, applicationName);
-            this._options.instrumentationKey = instrumentationKey;
-        }
+    AppInsightsProvider.prototype.configure = function (instrumentationKey, options) {
+        Tools.extend(this._options, options);
+        this._options.instrumentationKey = instrumentationKey;
     }; // invoked when the provider is run
     return AppInsightsProvider;
 }());
-//# sourceMappingURL=angular-applicationinsights.js.map
