@@ -97,7 +97,7 @@ var options = {
 	// sessionInactivityTimeout: The time (in milliseconds) that a user session can be inactive, before a new session will be created (on the next api call). Default is 30mins.
 	sessionInactivityTimeout: 1800000,
 	// developerMode: Makes the service not post anything to AI but print it to the console instead
-	developerMode: true
+	developerMode: false
 	};
 	
 ```
