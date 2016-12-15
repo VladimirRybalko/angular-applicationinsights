@@ -1,3 +1,8 @@
+// Code here will be linted with JSHint.
+/* jshint ignore:start */
+(function(angular){
+// Code here will be ignored by JSHint.
+/* jshint ignore:end */
 /// <reference path="typings/angularjs/angular.d.ts" />
 var Tools = (function () {
     function Tools(angular) {
@@ -338,9 +343,7 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
-            /* test-code */
-            console.log('LineNumber is ' + v);
-            /* end-test-code */
+
             this.lineNumber = undefined;
             return;
         }
@@ -990,3 +993,9 @@ var AppInsightsProvider = (function () {
     }; // invoked when the provider is run
     return AppInsightsProvider;
 }());
+//# sourceMappingURL=angular-applicationinsights.js.map
+// Code here will be linted with JSHint.
+/* jshint ignore:start */
+})(window.angular);
+// Code here will be ignored by JSHint.
+/* jshint ignore:end */
