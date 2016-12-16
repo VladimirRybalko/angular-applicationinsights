@@ -343,11 +343,10 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
-
-            this.lineNumber = undefined;
+            this.line = undefined;
             return;
         }
-        this.lineNumber = Number(v);
+        this.line = Number(v);
     };
     //private getColumnNumber() {
     //    return this.columnNumber;
@@ -369,7 +368,7 @@ var StackFrame = (function () {
         var functionName = this.method || '{anonymous}';
         var args = '(' + (this.args || []).join(',') + ')';
         var fileName = this.fileName ? ('@' + this.fileName) : '';
-        var lineNumber = Tools.isNumber(this.lineNumber) ? (':' + this.lineNumber) : '';
+        var lineNumber = Tools.isNumber(this.line) ? (':' + this.line) : '';
         var columnNumber = Tools.isNumber(this.columnNumber) ? (':' + this.columnNumber) : '';
         return functionName + args + fileName + lineNumber + columnNumber;
     };
