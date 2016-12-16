@@ -25,8 +25,8 @@ beforeEach(function() {
                 if (actual.fileName !== expected[2]) {
                     message += 'expected fileName: ' + actual.fileName + ' to equal ' + expected[2] + '\n';
                 }
-                if (actual.lineNumber !== expected[3]) {
-                    message += 'expected lineNumber: ' + actual.lineNumber + ' to equal ' + expected[3] + '\n';
+                if (actual.line !== expected[3]) {
+                    message += 'expected line: ' + actual.line + ' to equal ' + expected[3] + '\n';
                 }
                 if (actual.columnNumber !== expected[4]) {
                     message += 'expected columnNumber: ' + actual.columnNumber + ' to equal ' + expected[4] + '\n';
