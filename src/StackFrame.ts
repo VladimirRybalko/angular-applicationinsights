@@ -11,7 +11,7 @@ class StackFrame {
     method;
     args;
     fileName;
-    lineNumber;
+    line;
     columnNumber;
     level;
 
@@ -64,7 +64,7 @@ class StackFrame {
         this.args = v;
     }
 
-   
+
     //private getFileName() {
     //    return this.fileName;
     //}
@@ -82,10 +82,10 @@ class StackFrame {
             /* test-code */
             console.log('LineNumber is ' + v);
             /* end-test-code */
-            this.lineNumber = undefined;
+            this.line = undefined;
             return;
         }
-        this.lineNumber = Number(v);
+        this.line = Number(v);
     }
 
     //private getColumnNumber() {
@@ -111,7 +111,7 @@ class StackFrame {
         var functionName = this.method || '{anonymous}';
         var args = '(' + (this.args || []).join(',') + ')';
         var fileName = this.fileName ? ('@' + this.fileName) : '';
-        var lineNumber = Tools.isNumber(this.lineNumber) ? (':' + this.lineNumber) : '';
+        var lineNumber = Tools.isNumber(this.line) ? (':' + this.line) : '';
         var columnNumber = Tools.isNumber(this.columnNumber) ? (':' + this.columnNumber) : '';
         return functionName + args + fileName + lineNumber + columnNumber;
     }
