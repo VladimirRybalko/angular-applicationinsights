@@ -57,19 +57,20 @@
             };
         }
 
-        delegator(orignalFn, level) {
+        delegator(originalFn, level) {
      
             var interceptingFn = function () {
                 var args = [].slice.call(arguments);
                 // track the call
-                LogInterceptor.interceptFuntion(args[0], level);
+                var message = args.join(' ');
+                LogInterceptor.interceptFuntion(message, level);
                 // Call the original 
-                orignalFn.apply(null, args);
+                originalFn.apply(null, args);
             };
             
-            for(var n in orignalFn){
+            for(var n in originalFn){
             
-                interceptingFn[n] = orignalFn[n];
+                interceptingFn[n] = originalFn[n];
             }
             
             return interceptingFn;

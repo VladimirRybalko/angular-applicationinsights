@@ -41,14 +41,15 @@ angularAppInsights.run([
             if (applicationInsightsService.options.autoPageViewTracking
                 && locationChangeStartOn) {
 
-                var duration = (new Date()).getTime() - locationChangeStartOn;
-                var name = applicationInsightsService.options.applicationName + $location.path();
+                var duration = (new Date()).getTime() - locationChangeStartOn; // need to fix it.
+                // time is collected incorrectly
 
+                var name = applicationInsightsService.options.applicationName + $location.path();
                 if (view) {
                     name += "#" + view;
                 }
 
-                applicationInsightsService.trackPageView(name, null, null, null, duration);
+                applicationInsightsService.trackPageView(name, null, null, null, null);
             }
         });
     }
