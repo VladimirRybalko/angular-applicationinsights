@@ -343,6 +343,7 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
+
             this.line = undefined;
             return;
         }
@@ -546,16 +547,17 @@ var LogInterceptor = (function () {
             log: Tools.isNullOrUndefined(this._logFn) ? Tools.noop : this._logFn
         };
     };
-    LogInterceptor.prototype.delegator = function (orignalFn, level) {
+    LogInterceptor.prototype.delegator = function (originalFn, level) {
         var interceptingFn = function () {
             var args = [].slice.call(arguments);
             // track the call
-            LogInterceptor.interceptFuntion(args[0], level);
+            var message = args.join(' ');
+            LogInterceptor.interceptFuntion(message, level);
             // Call the original 
-            orignalFn.apply(null, args);
+            originalFn.apply(null, args);
         };
-        for (var n in orignalFn) {
-            interceptingFn[n] = orignalFn[n];
+        for (var n in originalFn) {
+            interceptingFn[n] = originalFn[n];
         }
         return interceptingFn;
     };
@@ -647,7 +649,7 @@ var ApplicationInsights = (function () {
     function ApplicationInsights(localStorage, $locale, $window, $location, logInterceptor, exceptionInterceptor, httpRequestFactory, options) {
         var _this = this;
         this._sessionKey = "$$appInsights__session";
-        this._version = "angular:0.2.8";
+        this._version = "angular:0.2.9";
         this._analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
         this._contentType = "application/json";
         this._localStorage = localStorage;
@@ -959,12 +961,13 @@ angularAppInsights.run([
         $rootScope.$on("$viewContentLoaded", function (e, view) {
             if (applicationInsightsService.options.autoPageViewTracking
                 && locationChangeStartOn) {
-                var duration = (new Date()).getTime() - locationChangeStartOn;
+                var duration = (new Date()).getTime() - locationChangeStartOn; // need to fix it.
+                // time is collected incorrectly
                 var name = applicationInsightsService.options.applicationName + $location.path();
                 if (view) {
                     name += "#" + view;
                 }
-                applicationInsightsService.trackPageView(name, null, null, null, duration);
+                applicationInsightsService.trackPageView(name, null, null, null, null);
             }
         });
     }
