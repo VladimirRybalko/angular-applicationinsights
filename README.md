@@ -89,9 +89,9 @@ var options = {
 	// autoPageViewTracking: enables the sending a event to Application Insights when 
 	// ever the $locationChangeSuccess event is fired on the rootScope
 	autoPageViewTracking: true,
-	// stateChangeTracking: enables the sending a event to Application Insights when 
+	// autoStateChangeTracking: enables the sending a event to Application Insights when 
 	// ever the $stateChangeSuccess event is fired on the rootScope. To enable 'autoPageViewTracking' option should be set too. 
-	stateChangeTracking: false,
+	autoStateChangeTracking: false,
 	// autoLogTracking: enables the interception of calls to the $log service and have the trace 
 	// data sent to Application Insights.
 	autoLogTracking: true,
