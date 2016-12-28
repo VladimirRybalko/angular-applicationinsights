@@ -2,7 +2,8 @@
      class Options {
         
             applicationName= '';
-            autoPageViewTracking= true;
+            autoPageViewTracking = true;
+            autoStateChangeTracking = false;
             autoLogTracking= true;
             autoExceptionTracking= true;
             sessionInactivityTimeout = 1800000;

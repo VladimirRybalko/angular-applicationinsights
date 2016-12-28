@@ -74,18 +74,14 @@ describe('Application Insights for Angular JS Provider', function(){
 	});
 
 	describe('Page view Tracking', function() {
+        	 
+	  it('Sent data should match expectications', inject(function (applicationInsightsService) {
 
-	  beforeEach(inject(function(applicationInsightsService) {
-  	    applicationInsightsService.options.autoPageViewTracking = true;
-	  }));
-
-		it('Sent data should match expectications',function(){
-
+		    applicationInsightsService.options.autoPageViewTracking = testAutoPageView;
 			$httpBackend.resetExpectations();
-			$httpBackend.expect('POST','https://dc.services.visualstudio.com/v2/track',function(json){
+			$httpBackend.expect('POST','https://dc.services.visualstudio.com/v2/track', function(json){
 				var data = JSON.parse(json);
 
-				//expect(data.length).toEqual(1);
 				expect(data.name).toEqual('Microsoft.ApplicationInsights.Pageview');
 				expect(data.data.type).toEqual('Microsoft.ApplicationInsights.PageViewData');
 				expect(data.data.item.ver).toEqual(1);
@@ -105,27 +101,24 @@ describe('Application Insights for Angular JS Provider', function(){
 			_insights.trackPageView('/sometest/page','http://www.somewhere.com/sometest/page',{testprop:'testvalue'},{metric1:2345}, 3456);
 			$httpBackend.flush();
  
-		});
+		}));
 
-	  it('Tracking sent on $locationChangeStart+$ViewContentLoad', inject(function($rootScope) {
-
-	      var viewName = 'VIEW_NAME';
+	  it('Tracking sent on $locationChangeStart+$locationChangeSuccess', inject(function ($rootScope, applicationInsightsService) {
+          
+	      applicationInsightsService.options.autoPageViewTracking = true;
+	      
 
 	      $httpBackend.resetExpectations();
 	      $httpBackend.expect('POST', 'https://dc.services.visualstudio.com/v2/track', function(json) {
 	          var data = JSON.parse(json);
 	          
-	          expect(data.data.item.name).toEqual('angularjs-appinsights-unittests#VIEW_NAME');
+	          expect(data.data.item.name).toEqual('angularjs-appinsights-unittests#http://server/');
 
 	          return true;
 	        })
 	      .respond(200, '');
 
-	      $rootScope.$broadcast('$locationChangeStart');
-	      $rootScope.$broadcast('$viewContentLoaded', viewName);
-
 	      $httpBackend.flush();
-
 	    }));
 	});
 

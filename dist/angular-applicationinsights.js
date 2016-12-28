@@ -1,8 +1,3 @@
-// Code here will be linted with JSHint.
-/* jshint ignore:start */
-(function(angular){
-// Code here will be ignored by JSHint.
-/* jshint ignore:end */
 /// <reference path="typings/angularjs/angular.d.ts" />
 var Tools = (function () {
     function Tools(angular) {
@@ -343,7 +338,9 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
-
+            /* test-code */
+            console.log('LineNumber is ' + v);
+            /* end-test-code */
             this.line = undefined;
             return;
         }
@@ -598,6 +595,7 @@ var Options = (function () {
     function Options() {
         this.applicationName = '';
         this.autoPageViewTracking = true;
+        this.autoStateChangeTracking = false;
         this.autoLogTracking = true;
         this.autoExceptionTracking = true;
         this.sessionInactivityTimeout = 1800000;
@@ -812,7 +810,6 @@ var ApplicationInsights = (function () {
         }
     };
     ApplicationInsights.prototype.trackPageView = function (pageName, pageUrl, properties, measurements, duration) {
-        // TODO: consider possible overloads (no name or url but properties and measurements)
         var data = this.generateAppInsightsData(ApplicationInsights.names.pageViews, ApplicationInsights.types.pageViews, {
             ver: 1,
             url: Tools.isNullOrUndefined(pageUrl) ? this._location.absUrl() : pageUrl,
@@ -953,21 +950,32 @@ angularAppInsights.run([
     "$rootScope", "$location", "applicationInsightsService",
     function ($rootScope, $location, applicationInsightsService) {
         var locationChangeStartOn;
+        var stateChangeStartOn;
         $rootScope.$on("$locationChangeStart", function () {
-            if (applicationInsightsService.options.autoPageViewTracking) {
+            if (applicationInsightsService.options.autoPageViewTracking && !applicationInsightsService.options.autoStateChangeTracking) {
                 locationChangeStartOn = (new Date()).getTime();
             }
         });
-        $rootScope.$on("$viewContentLoaded", function (e, view) {
-            if (applicationInsightsService.options.autoPageViewTracking
-                && locationChangeStartOn) {
-                var duration = (new Date()).getTime() - locationChangeStartOn; // need to fix it.
-                // time is collected incorrectly
+        $rootScope.$on("$locationChangeSuccess", function (e, view) {
+            if (applicationInsightsService.options.autoPageViewTracking && !applicationInsightsService.options.autoStateChangeTracking) {
+                var duration = (new Date()).getTime() - locationChangeStartOn;
                 var name = applicationInsightsService.options.applicationName + $location.path();
                 if (view) {
                     name += "#" + view;
                 }
-                applicationInsightsService.trackPageView(name, null, null, null, null);
+                applicationInsightsService.trackPageView(name, null, null, null, duration);
+            }
+        });
+        $rootScope.$on("$stateChangeStart", function () {
+            if (applicationInsightsService.options.autoPageViewTracking && applicationInsightsService.options.autoStateChangeTracking) {
+                stateChangeStartOn = (new Date()).getTime();
+            }
+        });
+        $rootScope.$on("$stateChangeSuccess", function () {
+            if (applicationInsightsService.options.autoPageViewTracking && applicationInsightsService.options.autoStateChangeTracking) {
+                var duration = (new Date()).getTime() - stateChangeStartOn;
+                var name = applicationInsightsService.options.applicationName + $location.path();
+                applicationInsightsService.trackPageView(name, null, null, null, duration);
             }
         });
     }
@@ -995,9 +1003,3 @@ var AppInsightsProvider = (function () {
     }; // invoked when the provider is run
     return AppInsightsProvider;
 }());
-//# sourceMappingURL=angular-applicationinsights.js.map
-// Code here will be linted with JSHint.
-/* jshint ignore:start */
-})(window.angular);
-// Code here will be ignored by JSHint.
-/* jshint ignore:end */

@@ -28,28 +28,43 @@ angularAppInsights.run([
     "$rootScope", "$location", "applicationInsightsService",
     ($rootScope, $location, applicationInsightsService: ApplicationInsights) => {
         var locationChangeStartOn: number;
+        var stateChangeStartOn: number;
 
         $rootScope.$on("$locationChangeStart", () => {
 
-            if (applicationInsightsService.options.autoPageViewTracking) {
+            if (applicationInsightsService.options.autoPageViewTracking && !applicationInsightsService.options.autoStateChangeTracking) {
                 locationChangeStartOn = (new Date()).getTime();
             }
         });
 
-        $rootScope.$on("$viewContentLoaded", (e, view) => {
+        $rootScope.$on("$locationChangeSuccess", (e, view) => {
 
-            if (applicationInsightsService.options.autoPageViewTracking
-                && locationChangeStartOn) {
+            if (applicationInsightsService.options.autoPageViewTracking && !applicationInsightsService.options.autoStateChangeTracking) {
 
-                var duration = (new Date()).getTime() - locationChangeStartOn; // need to fix it.
-                // time is collected incorrectly
-
+                var duration = (new Date()).getTime() - locationChangeStartOn; 
                 var name = applicationInsightsService.options.applicationName + $location.path();
                 if (view) {
                     name += "#" + view;
                 }
+                
+                applicationInsightsService.trackPageView(name, null, null, null, duration);
+            }
+        });
+                
+        $rootScope.$on("$stateChangeStart", () => {
 
-                applicationInsightsService.trackPageView(name, null, null, null, null);
+            if (applicationInsightsService.options.autoPageViewTracking && applicationInsightsService.options.autoStateChangeTracking) {
+                stateChangeStartOn = (new Date()).getTime();
+            }
+        });
+
+        $rootScope.$on("$stateChangeSuccess", () => {
+
+            if (applicationInsightsService.options.autoPageViewTracking && applicationInsightsService.options.autoStateChangeTracking) {
+
+                var duration = (new Date()).getTime() - stateChangeStartOn;
+                var name = applicationInsightsService.options.applicationName + $location.path();                
+                applicationInsightsService.trackPageView(name, null, null, null, duration);
             }
         });
     }

@@ -250,7 +250,6 @@ class ApplicationInsights {
     }
 
     trackPageView(pageName?, pageUrl?, properties?, measurements?, duration?: number) {
-        // TODO: consider possible overloads (no name or url but properties and measurements)
         const data = this.generateAppInsightsData(ApplicationInsights.names.pageViews,
             ApplicationInsights.types.pageViews,
             {
