@@ -8,7 +8,10 @@ analyticsDemo.config(function(applicationInsightsServiceProvider){
                                                                                             applicationName:'analyticsDemo',
                                                                                             autoLogTracking:true,
                                                                                             autoPageViewTracking:true,
-                                                                                            autoExceptionTracking:true
+																							// We can pass a custom error ID if autoExceptionTracking:false and we manually call trackException as below
+																							//applicationInsightsService.trackException(exception, cause, { errorTraceId: "SOME_RANDOM_ID" });																							
+                                                                                            autoExceptionTracking:true,
+																							properties: { tags: 'analyticsDemo' } // can be any type of property
                                                                                         });
 })
 
