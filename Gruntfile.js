@@ -44,7 +44,7 @@ module.exports = function(grunt) {
         separator: '\n',
       },
       dist: {
-        src: ['src/header.js','build/angular-applicationinsights.js', 'src/footer.js' ],
+        src: ['build/angular-applicationinsights.js'],
         dest: 'build/angular-applicationinsights.js',
       },
     },

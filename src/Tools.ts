@@ -10,6 +10,7 @@ class Tools {
     static isArray: (val: any) => boolean;
     static isString: (val: any) => boolean;
     static extend: (destination: any, ...sources: any[]) => any;
+    static copy: (source: any, destination: any) => any;
     static toJson: (obj: any, pretty?: boolean) => string;
     static fromJson: (obj: string) => any;
     static forEach;
@@ -27,6 +28,7 @@ class Tools {
             Tools.toJson = angular.toJson,
             Tools.fromJson = angular.fromJson,
             Tools.forEach = angular.forEach,
+            Tools.copy = angular.copy,
             Tools.noop = angular.noop; // jshint ignore:line
     }
 

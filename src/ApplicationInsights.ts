@@ -41,7 +41,7 @@ class ApplicationInsights {
 
     private _commonProperties: any;
 
-    private _version = "angular:0.2.9";
+    private _version = "angular:0.3.0";
     private _analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
     private _contentType = "application/json";
 
@@ -72,7 +72,7 @@ class ApplicationInsights {
             this._logInterceptor.setInterceptFunction((message, level, properties?) => this.trackTraceMessage(message, level, properties));
         }
         if (this.options.autoExceptionTracking) {
-            this._exceptionInterceptor.setInterceptFunction((exception, cause) => this.trackException(exception, cause));
+            this._exceptionInterceptor.setInterceptFunction((exception, cause, exceptionProperties) => this.trackException(exception, cause, exceptionProperties));
         }
 
     }
@@ -85,6 +85,22 @@ class ApplicationInsights {
         if (Tools.isNullOrUndefined(uuid)) {
             uuid = Tools.generateGuid();
             this._localStorage.set(uuidKey, uuid);
+        }
+        return uuid;
+    }
+
+    private getOperationId() {
+        const uuidKey = "$$appInsights__operationid";
+        var uuid = Tools.generateGuid();
+        this._localStorage.set(uuidKey, uuid);
+        return uuid;
+    }
+
+    private getStoredOperationId() {
+        const uuidKey = "$$appInsights__operationid";
+        var uuid = this._localStorage.get(uuidKey);
+        if (Tools.isNullOrUndefined(uuid)) {
+            uuid = this.getOperationId();
         }
         return uuid;
     }
@@ -279,6 +295,10 @@ class ApplicationInsights {
         if (Tools.isNullOrUndefined(message) || !Tools.isString(message)) {
             return;
         }
+        if (this.options.properties) {
+            properties = properties || {};
+            Tools.extend(properties, this.options.properties);
+        }
         const data = this.generateAppInsightsData(ApplicationInsights.names.traceMessage,
             ApplicationInsights.types.traceMessage,
             {
@@ -291,6 +311,10 @@ class ApplicationInsights {
     }
 
     trackMetric(name, value, properties) {
+        if (this.options.properties) {
+            properties = properties || {};
+            Tools.extend(properties, this.options.properties);
+        }
         const data = this.generateAppInsightsData(ApplicationInsights.names.metrics,
             ApplicationInsights.types.metrics,
             {
@@ -301,13 +325,21 @@ class ApplicationInsights {
         this.sendData(data);
     }
 
-    trackException(exception, cause) {
+    trackException(exception, cause, exceptionProperties) {
         if (Tools.isNullOrUndefined(exception)) {
             return;
         }
 
         // parse the stack
         const parsedStack = StackParser.parse(exception);
+        const properties = {};
+
+        Tools.copy(this.options.properties, properties);
+
+        if (exceptionProperties) {
+            exceptionProperties = exceptionProperties || {};
+            Tools.extend(properties, exceptionProperties);
+        }
         const data = this.generateAppInsightsData(ApplicationInsights.names.exception,
             ApplicationInsights.types.exception,
             {
@@ -321,7 +353,8 @@ class ApplicationInsights {
                         parsedStack: parsedStack,
                         hasFullStack: !Tools.isNullOrUndefined(parsedStack)
                     }
-                ]
+                ],
+                properties: properties
             });
         this.sendData(data);
     }
@@ -346,7 +379,7 @@ class ApplicationInsights {
                 id: this.getSessionId()
             },
             operation: {
-                id: Tools.generateGuid()
+                id: payloadName === ApplicationInsights.names.pageViews ? this.getOperationId() : this.getStoredOperationId()
             },
             device: {
                 id: "browser",

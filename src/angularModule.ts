@@ -15,9 +15,13 @@ var tools = new Tools(angular);
 
 // setup some features that can only be done during the configure pass
 angularAppInsights.config([
-    "$provide", $provide => {
+    "$provide", "$httpProvider",
+    ($provide, $httpProvider) => {
         logInterceptor = new LogInterceptor($provide, angular);
         exceptionInterceptor = new ExceptionInterceptor($provide);
+        if ($httpProvider && $httpProvider.interceptors) {
+            $httpProvider.interceptors.push('ApplicationInsightsInterceptor');
+        }
     }
 ]);
 
@@ -43,11 +47,12 @@ angularAppInsights.run([
 
                 var duration = (new Date()).getTime() - locationChangeStartOn; 
                 var name = applicationInsightsService.options.applicationName + $location.path();
+                var properties = applicationInsightsService.options.properties;
                 if (view) {
                     name += "#" + view;
                 }
                 
-                applicationInsightsService.trackPageView(name, null, null, null, duration);
+                applicationInsightsService.trackPageView(name, null, properties, null, duration);
             }
         });
                 
@@ -63,12 +68,26 @@ angularAppInsights.run([
             if (applicationInsightsService.options.autoPageViewTracking && applicationInsightsService.options.autoStateChangeTracking) {
 
                 var duration = (new Date()).getTime() - stateChangeStartOn;
-                var name = applicationInsightsService.options.applicationName + $location.path();                
-                applicationInsightsService.trackPageView(name, null, null, null, duration);
+                var name = applicationInsightsService.options.applicationName + $location.path();   
+                var properties = applicationInsightsService.options.properties;             
+                applicationInsightsService.trackPageView(name, null, properties, null, duration);
             }
         });
     }
 ]);
+
+angularAppInsights.factory('ApplicationInsightsInterceptor', ['applicationInsightsService', '$q', function (applicationInsightsService, $q) {
+    return {
+        request: function (config) {
+            if (config) {
+                config.headers = config.headers || {};
+                config.headers['x-ms-request-root-id'] = applicationInsightsService.getStoredOperationId();
+                config.headers['x-ms-request-id'] = applicationInsightsService.getUniqueId();
+                return config;
+            }
+        }
+    };
+}]);
 
 class AppInsightsProvider implements angular.IServiceProvider {
     // configuration properties for the provider
