@@ -10,6 +10,7 @@ var Tools = (function () {
             Tools.toJson = angular.toJson,
             Tools.fromJson = angular.fromJson,
             Tools.forEach = angular.forEach,
+            Tools.copy = angular.copy,
             Tools.noop = angular.noop; // jshint ignore:line
     }
     Tools.isNullOrUndefined = function (val) {
@@ -338,9 +339,7 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
-            /* test-code */
-            console.log('LineNumber is ' + v);
-            /* end-test-code */
+
             this.line = undefined;
             return;
         }
@@ -601,6 +600,7 @@ var Options = (function () {
         this.sessionInactivityTimeout = 1800000;
         this.instrumentationKey = '';
         this.developerMode = false;
+        this.properties = {};
     }
     return Options;
 }());
@@ -647,7 +647,7 @@ var ApplicationInsights = (function () {
     function ApplicationInsights(localStorage, $locale, $window, $location, logInterceptor, exceptionInterceptor, httpRequestFactory, options) {
         var _this = this;
         this._sessionKey = "$$appInsights__session";
-        this._version = "angular:0.2.9";
+        this._version = "angular:0.3.0";
         this._analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
         this._contentType = "application/json";
         this._localStorage = localStorage;
@@ -665,7 +665,7 @@ var ApplicationInsights = (function () {
             this._logInterceptor.setInterceptFunction(function (message, level, properties) { return _this.trackTraceMessage(message, level, properties); });
         }
         if (this.options.autoExceptionTracking) {
-            this._exceptionInterceptor.setInterceptFunction(function (exception, cause) { return _this.trackException(exception, cause); });
+            this._exceptionInterceptor.setInterceptFunction(function (exception, cause, exceptionProperties) { return _this.trackException(exception, cause, exceptionProperties); });
         }
     }
     ApplicationInsights.prototype.getUniqueId = function () {
@@ -675,6 +675,20 @@ var ApplicationInsights = (function () {
         if (Tools.isNullOrUndefined(uuid)) {
             uuid = Tools.generateGuid();
             this._localStorage.set(uuidKey, uuid);
+        }
+        return uuid;
+    };
+    ApplicationInsights.prototype.getOperationId = function () {
+        var uuidKey = "$$appInsights__operationid";
+        var uuid = Tools.generateGuid();
+        this._localStorage.set(uuidKey, uuid);
+        return uuid;
+    };
+    ApplicationInsights.prototype.getStoredOperationId = function () {
+        var uuidKey = "$$appInsights__operationid";
+        var uuid = this._localStorage.get(uuidKey);
+        if (Tools.isNullOrUndefined(uuid)) {
+            uuid = this.getOperationId();
         }
         return uuid;
     };
@@ -833,6 +847,10 @@ var ApplicationInsights = (function () {
         if (Tools.isNullOrUndefined(message) || !Tools.isString(message)) {
             return;
         }
+        if (this.options.properties) {
+            properties = properties || {};
+            Tools.extend(properties, this.options.properties);
+        }
         var data = this.generateAppInsightsData(ApplicationInsights.names.traceMessage, ApplicationInsights.types.traceMessage, {
             ver: 1,
             message: message,
@@ -842,6 +860,10 @@ var ApplicationInsights = (function () {
         this.sendData(data);
     };
     ApplicationInsights.prototype.trackMetric = function (name, value, properties) {
+        if (this.options.properties) {
+            properties = properties || {};
+            Tools.extend(properties, this.options.properties);
+        }
         var data = this.generateAppInsightsData(ApplicationInsights.names.metrics, ApplicationInsights.types.metrics, {
             ver: 1,
             metrics: [{ name: name, value: value }],
@@ -849,24 +871,31 @@ var ApplicationInsights = (function () {
         });
         this.sendData(data);
     };
-    ApplicationInsights.prototype.trackException = function (exception, cause) {
+    ApplicationInsights.prototype.trackException = function (exception, cause, exceptionProperties) {
         if (Tools.isNullOrUndefined(exception)) {
             return;
         }
         // parse the stack
         var parsedStack = StackParser.parse(exception);
+        var properties = {};
+        Tools.copy(this.options.properties, properties);
+        if (exceptionProperties) {
+            exceptionProperties = exceptionProperties || {};
+            Tools.extend(properties, exceptionProperties);
+        }
         var data = this.generateAppInsightsData(ApplicationInsights.names.exception, ApplicationInsights.types.exception, {
             ver: 1,
             handledAt: "Unhandled",
             exceptions: [
                 {
-                    typeName: exception.name,
-                    message: exception.message,
-                    stack: exception.stack,
+                    typeName: exception.name || "Unhandled",
+                    message: exception.message || "Unhandled",
+                    stack: exception.stack || "Unhandled",
                     parsedStack: parsedStack,
                     hasFullStack: !Tools.isNullOrUndefined(parsedStack)
                 }
-            ]
+            ],
+            properties: properties
         });
         this.sendData(data);
     };
@@ -888,7 +917,7 @@ var ApplicationInsights = (function () {
                 id: this.getSessionId()
             },
             operation: {
-                id: Tools.generateGuid()
+                id: payloadName === ApplicationInsights.names.pageViews ? this.getOperationId() : this.getStoredOperationId()
             },
             device: {
                 id: "browser",
@@ -939,9 +968,13 @@ var exceptionInterceptor;
 var tools = new Tools(angular);
 // setup some features that can only be done during the configure pass
 angularAppInsights.config([
-    "$provide", function ($provide) {
+    "$provide", "$httpProvider",
+    function ($provide, $httpProvider) {
         logInterceptor = new LogInterceptor($provide, angular);
         exceptionInterceptor = new ExceptionInterceptor($provide);
+        if ($httpProvider && $httpProvider.interceptors) {
+            $httpProvider.interceptors.push('ApplicationInsightsInterceptor');
+        }
     }
 ]);
 angularAppInsights.provider("applicationInsightsService", function () { return new AppInsightsProvider(); });
@@ -960,10 +993,11 @@ angularAppInsights.run([
             if (applicationInsightsService.options.autoPageViewTracking && !applicationInsightsService.options.autoStateChangeTracking) {
                 var duration = (new Date()).getTime() - locationChangeStartOn;
                 var name = applicationInsightsService.options.applicationName + $location.path();
+                var properties = applicationInsightsService.options.properties;
                 if (view) {
                     name += "#" + view;
                 }
-                applicationInsightsService.trackPageView(name, null, null, null, duration);
+                applicationInsightsService.trackPageView(name, null, properties, null, duration);
             }
         });
         $rootScope.$on("$stateChangeStart", function () {
@@ -975,11 +1009,24 @@ angularAppInsights.run([
             if (applicationInsightsService.options.autoPageViewTracking && applicationInsightsService.options.autoStateChangeTracking) {
                 var duration = (new Date()).getTime() - stateChangeStartOn;
                 var name = applicationInsightsService.options.applicationName + $location.path();
-                applicationInsightsService.trackPageView(name, null, null, null, duration);
+                var properties = applicationInsightsService.options.properties;
+                applicationInsightsService.trackPageView(name, null, properties, null, duration);
             }
         });
     }
 ]);
+angularAppInsights.factory('ApplicationInsightsInterceptor', ['applicationInsightsService', '$q', function (applicationInsightsService, $q) {
+        return {
+            request: function (config) {
+                if (config) {
+                    config.headers = config.headers || {};
+                    config.headers['x-ms-request-root-id'] = applicationInsightsService.getStoredOperationId();
+                    config.headers['x-ms-request-id'] = applicationInsightsService.getUniqueId();
+                    return config;
+                }
+            }
+        };
+    }]);
 var AppInsightsProvider = (function () {
     function AppInsightsProvider() {
         var _this = this;
@@ -1003,3 +1050,4 @@ var AppInsightsProvider = (function () {
     }; // invoked when the provider is run
     return AppInsightsProvider;
 }());
+//# sourceMappingURL=angular-applicationinsights.js.map
