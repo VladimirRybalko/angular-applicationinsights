@@ -27,14 +27,14 @@
             $provide.decorator('$exceptionHandler', [
                 '$delegate', ($delegate) => {
                     this._origExceptionHandler = $delegate;
-                    return (exception, cause) => {
+                    return (exception) => {
                         // track the call 
                         // ... only if there is no active issues/errors sending data over http, in order to prevent an infinite loop.
                         if (!ExceptionInterceptor.errorOnHttpCall) {
-                            this._interceptFunction(exception, cause);
+                            this._interceptFunction(exception);
                         }
                         // Call the original 
-                        this._origExceptionHandler(exception, cause);
+                        this._origExceptionHandler(exception);
                     };
                 }
             ]);

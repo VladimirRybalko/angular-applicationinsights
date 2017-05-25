@@ -22,6 +22,8 @@ class ApplicationInsights {
     private _exceptionInterceptor: ExceptionInterceptor;
     private _sessionKey = "$$appInsights__session";
     private _userKey = "$$appInsights__uuid";
+    private _deviceKey = "$$appInsights__device";
+    private _deviceTypeKey = "$$appInsights__device__type";
     options: Options;
 
     private static namespace = "Microsoft.ApplicationInsights.";
@@ -73,7 +75,7 @@ class ApplicationInsights {
             this._logInterceptor.setInterceptFunction((message, level, properties?) => this.trackTraceMessage(message, level, properties));
         }
         if (this.options.autoExceptionTracking) {
-            this._exceptionInterceptor.setInterceptFunction((exception, cause, exceptionProperties) => this.trackException(exception, cause, exceptionProperties));
+            this._exceptionInterceptor.setInterceptFunction((exception, exceptionProperties) => this.trackException(exception, exceptionProperties));
         }
     }
     
@@ -89,6 +91,32 @@ class ApplicationInsights {
 
     private setUserId(userId) {
         this._localStorage.set(this._userKey, userId);
+    }
+
+    private getDeviceId() {
+        var id = this._localStorage.get(this._deviceKey);
+
+        if (Tools.isNullOrUndefined(id)) {
+            id = Tools.generateGuid();
+            this._localStorage.set(this._deviceKey, id);
+        }
+
+        return id;
+    }
+
+    private getDeviceType() {
+        var type = this._localStorage.get(this._deviceTypeKey);
+
+        if (Tools.isNullOrUndefined(type)) {
+            type = "Browser";
+        }
+
+        return type;
+    }
+    
+    private setDeviceInfo(id, type) {
+        this._localStorage.set(this._deviceKey, id);
+        this._localStorage.set(this._deviceTypeKey, type);
     }
 
     private getOperationId() {
@@ -325,7 +353,7 @@ class ApplicationInsights {
         this.sendData(data);
     }
 
-    trackException(exception, cause, exceptionProperties) {
+    trackException(exception, exceptionProperties) {
         if (Tools.isNullOrUndefined(exception)) {
             return;
         }
@@ -350,7 +378,7 @@ class ApplicationInsights {
                         typeName: exception.name || "Unhandled",
                         message: exception.message || "Unhandled",
                         stack: exception.stack || "Unhandled",
-                        parsedStack: parsedStack,
+                        parsedStack: parsedStack,                        
                         hasFullStack: !Tools.isNullOrUndefined(parsedStack)
                     }
                 ],
@@ -367,13 +395,17 @@ class ApplicationInsights {
         this.makeNewSession(sessionId);
     }
 
+    defineDevice(id, type) {
+        this.setDeviceInfo(id, type);
+    }
+
     private generateAppInsightsData(payloadName, payloadDataType, payloadData) {
 
         if (this._commonProperties) {
             payloadData.properties = payloadData.properties || {};
             Tools.extend(payloadData.properties, this._commonProperties);
         }
-
+        
         return {
             name: payloadName,
             time: new Date().toISOString(),
@@ -390,10 +422,10 @@ class ApplicationInsights {
                 id: payloadName === ApplicationInsights.names.pageViews ? this.getOperationId() : this.getStoredOperationId()
             },
             device: {
-                id: "browser",
+                id: this.getDeviceId(),
                 locale: this._locale.id,
                 resolution: this._window.screen.availWidth + "x" + this._window.screen.availHeight,
-                type: "Browser"
+                type: this.getDeviceType()
             },
             internal: {
                 sdkVersion: this._version

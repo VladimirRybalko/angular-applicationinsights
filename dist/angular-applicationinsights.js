@@ -339,9 +339,7 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
-            /* test-code */
-            console.log('LineNumber is ' + v);
-            /* end-test-code */
+
             this.line = undefined;
             return;
         }
@@ -572,14 +570,14 @@ var ExceptionInterceptor = (function () {
         $provide.decorator('$exceptionHandler', [
             '$delegate', function ($delegate) {
                 _this._origExceptionHandler = $delegate;
-                return function (exception, cause) {
+                return function (exception) {
                     // track the call 
                     // ... only if there is no active issues/errors sending data over http, in order to prevent an infinite loop.
                     if (!ExceptionInterceptor.errorOnHttpCall) {
-                        _this._interceptFunction(exception, cause);
+                        _this._interceptFunction(exception);
                     }
                     // Call the original 
-                    _this._origExceptionHandler(exception, cause);
+                    _this._origExceptionHandler(exception);
                 };
             }
         ]);
@@ -650,6 +648,8 @@ var ApplicationInsights = (function () {
         var _this = this;
         this._sessionKey = "$$appInsights__session";
         this._userKey = "$$appInsights__uuid";
+        this._deviceKey = "$$appInsights__device";
+        this._deviceTypeKey = "$$appInsights__device__type";
         this._version = "angular:0.3.0";
         this._analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
         this._contentType = "application/json";
@@ -668,7 +668,7 @@ var ApplicationInsights = (function () {
             this._logInterceptor.setInterceptFunction(function (message, level, properties) { return _this.trackTraceMessage(message, level, properties); });
         }
         if (this.options.autoExceptionTracking) {
-            this._exceptionInterceptor.setInterceptFunction(function (exception, cause, exceptionProperties) { return _this.trackException(exception, cause, exceptionProperties); });
+            this._exceptionInterceptor.setInterceptFunction(function (exception, exceptionProperties) { return _this.trackException(exception, exceptionProperties); });
         }
     }
     ApplicationInsights.prototype.getUserId = function () {
@@ -682,6 +682,25 @@ var ApplicationInsights = (function () {
     };
     ApplicationInsights.prototype.setUserId = function (userId) {
         this._localStorage.set(this._userKey, userId);
+    };
+    ApplicationInsights.prototype.getDeviceId = function () {
+        var id = this._localStorage.get(this._deviceKey);
+        if (Tools.isNullOrUndefined(id)) {
+            id = Tools.generateGuid();
+            this._localStorage.set(this._deviceKey, id);
+        }
+        return id;
+    };
+    ApplicationInsights.prototype.getDeviceType = function () {
+        var type = this._localStorage.get(this._deviceTypeKey);
+        if (Tools.isNullOrUndefined(type)) {
+            type = "Browser";
+        }
+        return type;
+    };
+    ApplicationInsights.prototype.setDeviceInfo = function (id, type) {
+        this._localStorage.set(this._deviceKey, id);
+        this._localStorage.set(this._deviceTypeKey, type);
     };
     ApplicationInsights.prototype.getOperationId = function () {
         var uuidKey = "$$appInsights__operationid";
@@ -876,7 +895,7 @@ var ApplicationInsights = (function () {
         });
         this.sendData(data);
     };
-    ApplicationInsights.prototype.trackException = function (exception, cause, exceptionProperties) {
+    ApplicationInsights.prototype.trackException = function (exception, exceptionProperties) {
         if (Tools.isNullOrUndefined(exception)) {
             return;
         }
@@ -910,6 +929,9 @@ var ApplicationInsights = (function () {
     ApplicationInsights.prototype.defineSession = function (sessionId) {
         this.makeNewSession(sessionId);
     };
+    ApplicationInsights.prototype.defineDevice = function (id, type) {
+        this.setDeviceInfo(id, type);
+    };
     ApplicationInsights.prototype.generateAppInsightsData = function (payloadName, payloadDataType, payloadData) {
         if (this._commonProperties) {
             payloadData.properties = payloadData.properties || {};
@@ -931,10 +953,10 @@ var ApplicationInsights = (function () {
                 id: payloadName === ApplicationInsights.names.pageViews ? this.getOperationId() : this.getStoredOperationId()
             },
             device: {
-                id: "browser",
+                id: this.getDeviceId(),
                 locale: this._locale.id,
                 resolution: this._window.screen.availWidth + "x" + this._window.screen.availHeight,
-                type: "Browser"
+                type: this.getDeviceType()
             },
             internal: {
                 sdkVersion: this._version
@@ -1061,3 +1083,4 @@ var AppInsightsProvider = (function () {
     }; // invoked when the provider is run
     return AppInsightsProvider;
 }());
+//# sourceMappingURL=angular-applicationinsights.js.map

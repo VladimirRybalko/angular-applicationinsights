@@ -121,8 +121,9 @@ Sends a custom event to Application Insights.
 Sends error data to Application Insights. 
 ```Javascript
 // exception (Error) : Required - the error object to be processed.
+// properties (Hash): Optional - a String/String hash object of properties to associate with this exception
 
- applicationInsightsService.trackException( exception );
+ applicationInsightsService.trackException(exception, properties);
 ```
 Note: if the *autoTrackExceptions* option is enabled, this method will be called any time the **$exceptionHandler** is invoked.
 ```Javascript
@@ -169,7 +170,7 @@ Sends a trace log message to Application Insights.
 // severity (String) : Optional - The message severity Level (debug,info,warn, error). Defaults to 'info'. 
 // properties (Hash) : Optional - a String/String hash object of properties to associate with this event.
 
- applicationInsightsService.trackTraceMessage( message , severity , properties);
+ applicationInsightsService.trackTraceMessage( message, severity, properties);
 ```
 If the *autoLogTracking* option is enabled, trackTraceMessage will be called any time one of the **$log** service methods are called.
 ```Javascript
@@ -177,7 +178,27 @@ If the *autoLogTracking* option is enabled, trackTraceMessage will be called any
  $log.info('message');
 ```
 
+#### defineUser
+Define a new user metadata. 
+```Javascript
+// userId (Guid) : Required - The user unique identifier.
+ applicationInsightsService.defineUser( userId );
+```
 
+#### defineSession
+Define a new session identifier of Application Insights. 
+```Javascript
+// sessionId (Guid) : Required - The session identifier.
+ applicationInsightsService.defineSession( sessionId );
+```
+
+#### defineDevice
+Define a new device metadata. 
+```Javascript
+// id (Guid) : Required - The device unique identifier.
+// type (String) : Required - The device type.
+ applicationInsightsService.defineDevice( id, type );
+```
 
 [travisCI-image]: https://travis-ci.org/khaines/angular-applicationinsights.svg?branch=master&
 [travisCI-url]: https://travis-ci.org/khaines/angular-applicationinsights
