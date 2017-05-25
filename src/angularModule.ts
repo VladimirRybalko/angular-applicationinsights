@@ -82,7 +82,7 @@ angularAppInsights.factory('ApplicationInsightsInterceptor', ['applicationInsigh
             if (config) {
                 config.headers = config.headers || {};
                 config.headers['x-ms-request-root-id'] = applicationInsightsService.getStoredOperationId();
-                config.headers['x-ms-request-id'] = applicationInsightsService.getUniqueId();
+                config.headers['x-ms-request-id'] = applicationInsightsService.getUserId();
                 return config;
             }
         }

@@ -339,7 +339,9 @@ var StackFrame = (function () {
     //}
     StackFrame.prototype.setLineNumber = function (v) {
         if (!Tools.isNumber(v)) {
-
+            /* test-code */
+            console.log('LineNumber is ' + v);
+            /* end-test-code */
             this.line = undefined;
             return;
         }
@@ -647,6 +649,7 @@ var ApplicationInsights = (function () {
     function ApplicationInsights(localStorage, $locale, $window, $location, logInterceptor, exceptionInterceptor, httpRequestFactory, options) {
         var _this = this;
         this._sessionKey = "$$appInsights__session";
+        this._userKey = "$$appInsights__uuid";
         this._version = "angular:0.3.0";
         this._analyticsServiceUrl = "https://dc.services.visualstudio.com/v2/track";
         this._contentType = "application/json";
@@ -668,15 +671,17 @@ var ApplicationInsights = (function () {
             this._exceptionInterceptor.setInterceptFunction(function (exception, cause, exceptionProperties) { return _this.trackException(exception, cause, exceptionProperties); });
         }
     }
-    ApplicationInsights.prototype.getUniqueId = function () {
-        var uuidKey = "$$appInsights__uuid";
+    ApplicationInsights.prototype.getUserId = function () {
         // see if there is already an id stored locally, if not generate a new value
-        var uuid = this._localStorage.get(uuidKey);
+        var uuid = this._localStorage.get(this._userKey);
         if (Tools.isNullOrUndefined(uuid)) {
             uuid = Tools.generateGuid();
-            this._localStorage.set(uuidKey, uuid);
+            this._localStorage.set(this._userKey, uuid);
         }
         return uuid;
+    };
+    ApplicationInsights.prototype.setUserId = function (userId) {
+        this._localStorage.set(this._userKey, userId);
     };
     ApplicationInsights.prototype.getOperationId = function () {
         var uuidKey = "$$appInsights__operationid";
@@ -692,10 +697,10 @@ var ApplicationInsights = (function () {
         }
         return uuid;
     };
-    ApplicationInsights.prototype.makeNewSession = function () {
+    ApplicationInsights.prototype.makeNewSession = function (sessionId) {
         // no existing session data
         var sessionData = {
-            id: Tools.generateGuid(),
+            id: sessionId || Tools.generateGuid(),
             accessed: new Date().getTime()
         };
         this._localStorage.set(this._sessionKey, sessionData);
@@ -705,14 +710,14 @@ var ApplicationInsights = (function () {
         var sessionData = this._localStorage.get(this._sessionKey);
         if (Tools.isNullOrUndefined(sessionData)) {
             // no existing session data
-            sessionData = this.makeNewSession();
+            sessionData = this.makeNewSession(null);
         }
         else {
             var lastAccessed = Tools.isNullOrUndefined(sessionData.accessed) ? 0 : sessionData.accessed;
             var now = new Date().getTime();
             if ((now - lastAccessed > this.options.sessionInactivityTimeout)) {
                 // this session is expired, make a new one
-                sessionData = this.makeNewSession();
+                sessionData = this.makeNewSession(null);
             }
             else {
                 // valid session, update the last access timestamp
@@ -899,6 +904,12 @@ var ApplicationInsights = (function () {
         });
         this.sendData(data);
     };
+    ApplicationInsights.prototype.defineUser = function (userId) {
+        this.setUserId(userId);
+    };
+    ApplicationInsights.prototype.defineSession = function (sessionId) {
+        this.makeNewSession(sessionId);
+    };
     ApplicationInsights.prototype.generateAppInsightsData = function (payloadName, payloadDataType, payloadData) {
         if (this._commonProperties) {
             payloadData.properties = payloadData.properties || {};
@@ -910,7 +921,7 @@ var ApplicationInsights = (function () {
             ver: 1,
             iKey: this.options.instrumentationKey,
             user: {
-                id: this.getUniqueId(),
+                id: this.getUserId(),
                 type: "User"
             },
             session: {
@@ -1021,7 +1032,7 @@ angularAppInsights.factory('ApplicationInsightsInterceptor', ['applicationInsigh
                 if (config) {
                     config.headers = config.headers || {};
                     config.headers['x-ms-request-root-id'] = applicationInsightsService.getStoredOperationId();
-                    config.headers['x-ms-request-id'] = applicationInsightsService.getUniqueId();
+                    config.headers['x-ms-request-id'] = applicationInsightsService.getUserId();
                     return config;
                 }
             }
@@ -1050,4 +1061,3 @@ var AppInsightsProvider = (function () {
     }; // invoked when the provider is run
     return AppInsightsProvider;
 }());
-//# sourceMappingURL=angular-applicationinsights.js.map

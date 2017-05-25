@@ -21,6 +21,7 @@ class ApplicationInsights {
     private _logInterceptor: LogInterceptor;
     private _exceptionInterceptor: ExceptionInterceptor;
     private _sessionKey = "$$appInsights__session";
+    private _userKey = "$$appInsights__uuid";
     options: Options;
 
     private static namespace = "Microsoft.ApplicationInsights.";
@@ -74,19 +75,20 @@ class ApplicationInsights {
         if (this.options.autoExceptionTracking) {
             this._exceptionInterceptor.setInterceptFunction((exception, cause, exceptionProperties) => this.trackException(exception, cause, exceptionProperties));
         }
-
     }
-
-
-    private getUniqueId() {
-        const uuidKey = "$$appInsights__uuid";
+    
+    private getUserId() {
         // see if there is already an id stored locally, if not generate a new value
-        var uuid = this._localStorage.get(uuidKey);
+        var uuid = this._localStorage.get(this._userKey);
         if (Tools.isNullOrUndefined(uuid)) {
             uuid = Tools.generateGuid();
-            this._localStorage.set(uuidKey, uuid);
+            this._localStorage.set(this._userKey, uuid);
         }
         return uuid;
+    }
+
+    private setUserId(userId) {
+        this._localStorage.set(this._userKey, userId);
     }
 
     private getOperationId() {
@@ -104,17 +106,16 @@ class ApplicationInsights {
         }
         return uuid;
     }
-
-    private makeNewSession() {
+       
+    private makeNewSession(sessionId) {
         // no existing session data
         var sessionData = {
-            id: Tools.generateGuid(),
+            id: sessionId || Tools.generateGuid(),
             accessed: new Date().getTime()
         };
         this._localStorage.set(this._sessionKey, sessionData);
         return sessionData;
     }
-
 
     private getSessionId() {
 
@@ -123,16 +124,15 @@ class ApplicationInsights {
         if (Tools.isNullOrUndefined(sessionData)) {
 
             // no existing session data
-            sessionData = this.makeNewSession();
+            sessionData = this.makeNewSession(null);
         } else {
-
 
             var lastAccessed = Tools.isNullOrUndefined(sessionData.accessed) ? 0 : sessionData.accessed;
             var now = new Date().getTime();
             if ((now - lastAccessed > this.options.sessionInactivityTimeout)) {
 
                 // this session is expired, make a new one
-                sessionData = this.makeNewSession();
+                sessionData = this.makeNewSession(null);
             } else {
 
                 // valid session, update the last access timestamp
@@ -359,6 +359,14 @@ class ApplicationInsights {
         this.sendData(data);
     }
 
+    defineUser(userId) {
+        this.setUserId(userId);
+    }
+
+    defineSession(sessionId) {
+        this.makeNewSession(sessionId);
+    }
+
     private generateAppInsightsData(payloadName, payloadDataType, payloadData) {
 
         if (this._commonProperties) {
@@ -372,7 +380,7 @@ class ApplicationInsights {
             ver: 1,
             iKey: this.options.instrumentationKey,
             user: {
-                id: this.getUniqueId(),
+                id: this.getUserId(),
                 type: "User"
             },
             session: {
