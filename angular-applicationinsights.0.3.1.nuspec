@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>angular-applicationinsights</id>
+        <version>0.3.1</version>
+        <title>Application Insights for AngularJS</title>
+        <authors>khaines</authors>
+        <owners>khaines,eqwik</owners>
+        <licenseUrl>https://github.com/VladimirRybalko/angular-applicationinsights/blob/master/LICENSE</licenseUrl>
+        <projectUrl>https://github.com/VladimirRybalko/angular-applicationinsights</projectUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>An implementation of Microsoft Application Insights as a 100% AngularJS module. This module does not utilize the offical Application Insights Javascript SDK, in order to avoid depending on global code outside of the AngularJS platform scope.</description>
+        <summary>An implementation of Microsoft Application Insights as a 100% AngularJS module</summary>
+        <copyright>Copyright (c) 2015 Ken Haines</copyright>
+        <tags>angularjs applicationinsights appinsights metrics angular spa log telemetry exceptions crashes analytics ai</tags>
+    </metadata>
+    <files>
+        <file src="dist\angular-applicationinsights.js" target="content\scripts\angular-applicationinsights.js" />
+        <file src="dist\angular-applicationinsights.min.js" target="content\scripts\angular-applicationinsights.min.js" />
+    </files>
+</package>
