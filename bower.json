@@ -3,7 +3,8 @@
   "version": "0.3.1",
   "homepage": "https://github.com/VladimirRybalko/angular-applicationinsights",
   "authors": [
-    "Ken Haines <ken@kenhaines.net>"
+    "Ken Haines <ken@kenhaines.net>",
+	"Vladimir Rybalko"
   ],
   "description": "An angularJS module for using Microsoft Application Insights from within an angularJS application",
   "main": [ "dist/angular-applicationinsights.js" ],
@@ -15,7 +16,9 @@
     "stats",
     "metrics",
     "telemetry",
-    "Microsoft"
+    "Microsoft",
+	"ai",
+	"angular"
   ],
   "license": "MIT",
   "ignore": [
