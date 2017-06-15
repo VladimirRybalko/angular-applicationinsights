@@ -1,7 +1,7 @@
 {
   "name": "angular-applicationinsights",
   "description": "An angularJS module for sending application telemetry to Microsoft Application Insights",
-  "author": "Ken Haines <ken@kenhaines.net> (http://www.kenhaines.net)",
+  "author": "Ken Haines <ken@kenhaines.net> (http://www.kenhaines.net), Vladimir Rybalko",
   "keywords": [
     "angularJS",
     "app insights",
