@@ -6,6 +6,7 @@ describe('Application Insights for Angular JS Provider', function(){
 	var $log;
 	var $exceptionHandler;
     var _http;
+    var _offlineTrigger;
 
     var testKey = '1234567890';
     var testName = 'angularjs-appinsights-unittests';
@@ -49,7 +50,9 @@ describe('Application Insights for Angular JS Provider', function(){
 	    $log = $injector.get('$log');
 	    $log.reset();
 	    $exceptionHandler = $injector.get('$exceptionHandler');
-	    _http = $http;
+        _http = $http;
+	    _offlineTrigger = jasmine.createSpyObj('applicationInsightsService', ['sendData']);
+	    _offlineTrigger.sendData.and.returnValue(-1);
 	}));
  
  	afterEach(function(){
@@ -159,7 +162,13 @@ describe('Application Insights for Angular JS Provider', function(){
 			$log.debug('this is a message written via the $log serice');
 			$httpBackend.flush();
 		}); 
-	});
+    });
+
+    describe('Offline Request', function () {
+        it('Should return -1 when app goes offline', function () {
+            expect(_offlineTrigger.sendData()).toEqual(-1);
+        });
+    });
 
 	describe('Custom Event Tracking', function(){
 
