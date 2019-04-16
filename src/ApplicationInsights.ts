@@ -274,7 +274,8 @@ class ApplicationInsights {
             method: "POST",
             url: this._analyticsServiceUrl,
             headers: headers,
-            data: data,
+             data: data,
+            isOnline: (this._window.navigator.onLine) ? true : false
         };
         try {
            request.send(options,

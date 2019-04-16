@@ -25,7 +25,12 @@ class HttpRequest implements IHttpRequest {
         for (var header in options.headers) {
             request.setRequestHeader(header, options.headers[header]);
         }
-        request.send(JSON.stringify(options.data));
+        if (options.isOnline) {
+            request.send(JSON.stringify(options.data));
+        }
+        else {
+            onErrorCallback(-1);
+        }
 
     }
 
@@ -38,4 +43,5 @@ class HttpRequestOptions {
     url: string;
     headers: any;
     data: any;
+    isOnline: boolean;
 }
