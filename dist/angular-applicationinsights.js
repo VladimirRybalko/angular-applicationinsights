@@ -22,9 +22,9 @@ var Tools = (function () {
     Tools.generateGuid = function () {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.
             replace(/[xy]/g, function (c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
+                var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
     };
     return Tools;
 }());
@@ -625,7 +625,12 @@ var HttpRequest = (function () {
         for (var header in options.headers) {
             request.setRequestHeader(header, options.headers[header]);
         }
-        request.send(JSON.stringify(options.data));
+        if (options.isOnline) {
+            request.send(JSON.stringify(options.data));
+        }
+        else {
+            onErrorCallback(-1);
+        }
     };
     return HttpRequest;
 }());
@@ -832,6 +837,7 @@ var ApplicationInsights = (function () {
             url: this._analyticsServiceUrl,
             headers: headers,
             data: data,
+            isOnline: (this._window.navigator.onLine) ? true : false
         };
         try {
             request.send(options, function () {
@@ -1049,32 +1055,32 @@ angularAppInsights.run([
     }
 ]);
 angularAppInsights.factory('ApplicationInsightsInterceptor', ['applicationInsightsService', '$q', function (applicationInsightsService, $q) {
-        return {
-            request: function (config) {
-                if (config) {
-                    config.headers = config.headers || {};
-                    config.headers['x-ms-request-root-id'] = applicationInsightsService.getStoredOperationId();
-                    config.headers['x-ms-request-id'] = applicationInsightsService.getUserId();
-                    return config;
-                }
+    return {
+        request: function (config) {
+            if (config) {
+                config.headers = config.headers || {};
+                config.headers['x-ms-request-root-id'] = applicationInsightsService.getStoredOperationId();
+                config.headers['x-ms-request-id'] = applicationInsightsService.getUserId();
+                return config;
             }
-        };
-    }]);
+        }
+    };
+}]);
 var AppInsightsProvider = (function () {
     function AppInsightsProvider() {
         var _this = this;
         // configuration properties for the provider
         this._options = new Options();
         this.$get = ["$locale", "$window", "$location", "$rootScope", "$parse", "$document", "$$applicationInsightsHttpRequestService", function ($locale, $window, $location, $rootScope, $parse, $document, $$applicationInsightsHttpRequestService) {
-                // get a reference of storage
-                var storage = new AppInsightsStorage({
-                    window: $window,
-                    rootScope: $rootScope,
-                    document: $document,
-                    parse: $parse
-                });
-                return new ApplicationInsights(storage, $locale, $window, $location, logInterceptor, exceptionInterceptor, $$applicationInsightsHttpRequestService, _this._options);
-            }
+            // get a reference of storage
+            var storage = new AppInsightsStorage({
+                window: $window,
+                rootScope: $rootScope,
+                document: $document,
+                parse: $parse
+            });
+            return new ApplicationInsights(storage, $locale, $window, $location, logInterceptor, exceptionInterceptor, $$applicationInsightsHttpRequestService, _this._options);
+        }
         ];
     }
     AppInsightsProvider.prototype.configure = function (instrumentationKey, options) {

@@ -275,6 +275,7 @@ class ApplicationInsights {
             url: this._analyticsServiceUrl,
             headers: headers,
             data: data,
+            isOnline: (this._window.navigator.onLine) ? true : false
         };
         try {
            request.send(options,
