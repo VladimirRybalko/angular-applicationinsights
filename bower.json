@@ -1,10 +1,10 @@
 {
   "name": "angular-applicationinsights",
   "version": "0.3.1",
-  "homepage": "https://github.com/palanivelus/angular-applicationinsights",
+  "homepage": "https://github.com/VladimirRybalko/angular-applicationinsights",
   "authors": [
-    "Palanivelu <cspalni@gmail.com>",
-	"Karthikeyan VK <karthik_3030@yahoo.com>"
+    "Ken Haines <ken@kenhaines.net>",
+	"Vladimir Rybalko"
   ],
   "description": "An angularJS module for using Microsoft Application Insights from within an angularJS application",
   "main": [ "dist/angular-applicationinsights.js" ],
