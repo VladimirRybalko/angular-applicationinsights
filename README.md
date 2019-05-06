@@ -125,7 +125,7 @@ Sends error data to Application Insights.
 
  applicationInsightsService.trackException(exception, properties);
 ```
-Note: if the *autoTrackExceptions* option is enabled, this method will be called any time the **$exceptionHandler** is invoked.
+Note: if the *autoExceptionTracking* option is enabled, this method will be called any time the **$exceptionHandler** is invoked.
 ```Javascript
 	try
 	{
